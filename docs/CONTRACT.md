@@ -1,14 +1,10 @@
-# API contract v1
+# Second Chance API contract v2
 
-POST /api/compare accepts a JSON object with exactly these fields:
-- applicant_type: first_year | transfer | unknown
-- needs_aid: yes | no | unsure
-- requested_aid: yes | no | unsure
-- entry_year: 2027 | other | unknown
-
-A 200 response contains scope, status and cards. Each card has id, name, short_name, tagline, admissions, aid, catch, evidence (string array), source_url, checked_on, cycle, actions (string array) and assessment. Never return an eligibility decision.
-
-GET /api/health returns {"status":"ok"}. GET /api/universities returns the cards array for a default profile.
-Invalid field values and extra fields return 422. Do not accept or save income or uploaded documents.
-
-For the frontend only, frontend/src/fixture.json is one fictional card showing the response shape, not real university advice. Replace it with the real API before the live demo. Discuss contract changes with all three teammates first.
+All responses are JSON. No names, income, uploaded documents or account data.
+GET /api/health -> {"status":"ok"}.
+GET /api/schools?q=NAME -> {"status":"ok"|"unavailable", "candidates":[{"id":"scorecard:123"|"curated:slug", "name":"...", "location":"...", "domain":"..."|null, "domain_status":"directory"|"curated"|"unknown"}]}.
+A candidate is not proof of the current website or policy. The user chooses one when there are multiple matches. An unavailable directory returns no invented matches; verified curated fallback candidates can still be offered.
+POST /api/research accepts {"school_id":"candidate id", "profile":{"applicant_type":"first_year"|"transfer"|"unknown", "needs_aid":"yes"|"no"|"unsure", "requested_aid":"yes"|"no"|"unsure", "entry_year":"2027"|"other"|"unknown"}, "refresh":false}. No arbitrary URLs. Extra/invalid fields return 422; rate limits return 429.
+200 returns {"school":{"id":"...","name":"...","domain":"...|null}, "status":"fresh"|"cached"|"stale"|"unavailable", "message":"...", "cards":[{"id":"...", "short_name":"...", "tagline":"...", "evidence":[{"quote":"exact source text", "source_url":"https://...", "retrieved_at":"ISO 8601 UTC", "source_type":"live"|"curated", "review_status":"unreviewed"|"team_reviewed", "scope":"... or unknown", "cycle":"... or unknown"}], "actions":["..."], "assessment":"Not evaluated"}]}.
+Cards may be empty. Every substantive statement must be supported by its quote; automated snippets are unreviewed and never asserted as complete policy. Never infer missing conditions or eligibility. Stale results must say so. Actions are neutral questions unless a reviewed source supports a specific action. For unavailable, explain what failed; never fabricate a result. Only cache source evidence, not profiles. No implicit silent use of the fictional fixture in production.
+Synchronous requests: server limits network work and returns a bounded unavailable response on timeout. Do not claim exhaustive coverage. Discuss all contract changes with the team first.

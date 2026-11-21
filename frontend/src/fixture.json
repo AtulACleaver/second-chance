@@ -1,20 +1,30 @@
 {
-  "scope": "Fictional example only",
-  "status": "Not an eligibility, admission, or cost assessment",
+  "school": {
+    "id": "curated:example",
+    "name": "Example University",
+    "domain": "example.com"
+  },
+  "status": "fresh",
+  "message": "Fictional fixture only. Not real policy.",
   "cards": [
     {
       "id": "example",
-      "name": "Example University",
-      "short_name": "Example",
-      "tagline": "Fictional data for interface testing only.",
-      "admissions": "Replace this with verified university policy.",
-      "aid": "Replace this with verified university policy.",
-      "catch": "This is not advice.",
-      "evidence": ["Fictional evidence placeholder."],
-      "source_url": "https://example.com/",
-      "checked_on": "not checked",
-      "cycle": "not applicable",
-      "actions": ["Connect the real API before the demo."],
+      "short_name": "Example University",
+      "tagline": "Fictional interface data only.",
+      "evidence": [
+        {
+          "quote": "Fictional placeholder, not a real policy.",
+          "source_url": "https://example.com/",
+          "retrieved_at": "2026-11-22T00:00:00Z",
+          "source_type": "curated",
+          "review_status": "unreviewed",
+          "scope": "unknown",
+          "cycle": "unknown"
+        }
+      ],
+      "actions": [
+        "Connect the real API before the demo."
+      ],
       "assessment": "Not evaluated"
     }
   ]
