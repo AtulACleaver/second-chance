@@ -4,8 +4,12 @@ dist/
 __pycache__/
 .pytest_cache/
 *.pyc
+*.sqlite3
 .env
 .env.*
 !.env.example
 /desktop.png
 /mobile.png
+tests/
+**/tests/
+test_*.py
