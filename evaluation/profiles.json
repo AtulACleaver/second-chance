@@ -1,0 +1,92 @@
+[
+  {
+    "id": "01",
+    "applicant_type": "first_year",
+    "needs_aid": "yes",
+    "requested_aid": "no",
+    "entry_year": "2027",
+    "tufts_action": true,
+    "cornell_css": true
+  },
+  {
+    "id": "02",
+    "applicant_type": "first_year",
+    "needs_aid": "yes",
+    "requested_aid": "yes",
+    "entry_year": "2027",
+    "tufts_action": false,
+    "cornell_css": true
+  },
+  {
+    "id": "03",
+    "applicant_type": "first_year",
+    "needs_aid": "yes",
+    "requested_aid": "unsure",
+    "entry_year": "unknown",
+    "tufts_action": false,
+    "cornell_css": true
+  },
+  {
+    "id": "04",
+    "applicant_type": "transfer",
+    "needs_aid": "yes",
+    "requested_aid": "no",
+    "entry_year": "other",
+    "tufts_action": true,
+    "cornell_css": true
+  },
+  {
+    "id": "05",
+    "applicant_type": "transfer",
+    "needs_aid": "no",
+    "requested_aid": "no",
+    "entry_year": "2027",
+    "tufts_action": false,
+    "cornell_css": false
+  },
+  {
+    "id": "06",
+    "applicant_type": "first_year",
+    "needs_aid": "no",
+    "requested_aid": "yes",
+    "entry_year": "unknown",
+    "tufts_action": false,
+    "cornell_css": false
+  },
+  {
+    "id": "07",
+    "applicant_type": "unknown",
+    "needs_aid": "unsure",
+    "requested_aid": "unsure",
+    "entry_year": "unknown",
+    "tufts_action": false,
+    "cornell_css": false
+  },
+  {
+    "id": "08",
+    "applicant_type": "transfer",
+    "needs_aid": "unsure",
+    "requested_aid": "no",
+    "entry_year": "other",
+    "tufts_action": false,
+    "cornell_css": false
+  },
+  {
+    "id": "09",
+    "applicant_type": "unknown",
+    "needs_aid": "yes",
+    "requested_aid": "yes",
+    "entry_year": "other",
+    "tufts_action": false,
+    "cornell_css": true
+  },
+  {
+    "id": "10",
+    "applicant_type": "first_year",
+    "needs_aid": "no",
+    "requested_aid": "unsure",
+    "entry_year": "2027",
+    "tufts_action": false,
+    "cornell_css": false
+  }
+]
