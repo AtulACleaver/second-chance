@@ -1,0 +1,21 @@
+{
+  "scope": "Fictional example only",
+  "status": "Not an eligibility, admission, or cost assessment",
+  "cards": [
+    {
+      "id": "example",
+      "name": "Example University",
+      "short_name": "Example",
+      "tagline": "Fictional data for interface testing only.",
+      "admissions": "Replace this with verified university policy.",
+      "aid": "Replace this with verified university policy.",
+      "catch": "This is not advice.",
+      "evidence": ["Fictional evidence placeholder."],
+      "source_url": "https://example.com/",
+      "checked_on": "not checked",
+      "cycle": "not applicable",
+      "actions": ["Connect the real API before the demo."],
+      "assessment": "Not evaluated"
+    }
+  ]
+}
