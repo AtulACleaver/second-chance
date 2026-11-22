@@ -16,7 +16,7 @@ def get_db_path() -> str:
     configured = os.getenv("CACHE_PATH", "").strip()
     if configured:
         return configured
-    if os.getenv("VERCEL"):
+    if os.getenv("VERCEL") or os.getenv("AWS_LAMBDA_FUNCTION_NAME") or not os.access(".", os.W_OK):
         return "/tmp/second_chance.sqlite3"
     return DEFAULT_CACHE_PATH
 
@@ -24,23 +24,27 @@ def get_db_path() -> str:
 def init_cache_db(db_path: Optional[str] = None) -> None:
     # initialize sqlite table for evidence caching if not exists
     path = db_path or get_db_path()
-    conn = sqlite3.connect(path)
     try:
-        with conn:
-            conn.execute(
-                """
-                CREATE TABLE IF NOT EXISTS evidence_cache (
-                    school_id TEXT PRIMARY KEY,
-                    school_name TEXT NOT NULL,
-                    domain TEXT,
-                    cards_json TEXT NOT NULL,
-                    retrieved_at TEXT NOT NULL,
-                    status TEXT NOT NULL
+        conn = sqlite3.connect(path)
+        try:
+            with conn:
+                conn.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS evidence_cache (
+                        school_id TEXT PRIMARY KEY,
+                        school_name TEXT NOT NULL,
+                        domain TEXT,
+                        cards_json TEXT NOT NULL,
+                        retrieved_at TEXT NOT NULL,
+                        status TEXT NOT NULL
+                    )
+                    """
                 )
-                """
-            )
-    finally:
-        conn.close()
+        finally:
+            conn.close()
+    except Exception:
+        # safely ignore initialization errors on restricted storage
+        pass
 
 
 def get_cached_record(
@@ -50,45 +54,49 @@ def get_cached_record(
 ) -> Tuple[Optional[Dict[str, Any]], bool]:
     # retrieve cached evidence record and determine whether it is within ttl or stale
     # returns tuple of record dict and is stale boolean
-    path = db_path or get_db_path()
-    init_cache_db(path)
-
-    conn = sqlite3.connect(path)
     try:
-        cursor = conn.cursor()
-        cursor.execute(
-            "SELECT school_id, school_name, domain, cards_json, retrieved_at, status FROM evidence_cache WHERE school_id = ?",
-            (school_id,),
-        )
-        row = cursor.fetchone()
-        if not row:
-            return None, False
+        path = db_path or get_db_path()
+        init_cache_db(path)
 
-        sid, sname, dom, cards_str, retrieved_at_str, _ = row
-        cards = json.loads(cards_str)
-
-        # parse timestamp and check age
-        is_stale = False
+        conn = sqlite3.connect(path)
         try:
-            retrieved_dt = datetime.fromisoformat(retrieved_at_str.replace("Z", "+00:00"))
-            now_dt = datetime.now(timezone.utc)
-            age_seconds = (now_dt - retrieved_dt).total_seconds()
-            if age_seconds > ttl_seconds:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT school_id, school_name, domain, cards_json, retrieved_at, status FROM evidence_cache WHERE school_id = ?",
+                (school_id,),
+            )
+            row = cursor.fetchone()
+            if not row:
+                return None, False
+
+            sid, sname, dom, cards_str, retrieved_at_str, _ = row
+            cards = json.loads(cards_str)
+
+            # parse timestamp and check age
+            is_stale = False
+            try:
+                retrieved_dt = datetime.fromisoformat(retrieved_at_str.replace("Z", "+00:00"))
+                now_dt = datetime.now(timezone.utc)
+                age_seconds = (now_dt - retrieved_dt).total_seconds()
+                if age_seconds > ttl_seconds:
+                    is_stale = True
+            except Exception:
                 is_stale = True
-        except Exception:
-            is_stale = True
 
-        record = {
-            "school_id": sid,
-            "school_name": sname,
-            "domain": dom,
-            "cards": cards,
-            "retrieved_at": retrieved_at_str,
-        }
-        return record, is_stale
+            record = {
+                "school_id": sid,
+                "school_name": sname,
+                "domain": dom,
+                "cards": cards,
+                "retrieved_at": retrieved_at_str,
+            }
+            return record, is_stale
 
-    finally:
-        conn.close()
+        finally:
+            conn.close()
+    except Exception:
+        # fallback to miss if cache read fails
+        return None, False
 
 
 def set_cached_record(
@@ -103,27 +111,31 @@ def set_cached_record(
     if not cards:
         return
 
-    path = db_path or get_db_path()
-    init_cache_db(path)
-
-    now_utc = retrieved_at or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    cards_str = json.dumps(cards)
-
-    conn = sqlite3.connect(path)
     try:
-        with conn:
-            conn.execute(
-                """
-                INSERT INTO evidence_cache (school_id, school_name, domain, cards_json, retrieved_at, status)
-                VALUES (?, ?, ?, ?, ?, ?)
-                ON CONFLICT(school_id) DO UPDATE SET
-                    school_name = excluded.school_name,
-                    domain = excluded.domain,
-                    cards_json = excluded.cards_json,
-                    retrieved_at = excluded.retrieved_at,
-                    status = excluded.status
-                """,
-                (school_id, school_name, domain, cards_str, now_utc, "cached"),
-            )
-    finally:
-        conn.close()
+        path = db_path or get_db_path()
+        init_cache_db(path)
+
+        now_utc = retrieved_at or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        cards_str = json.dumps(cards)
+
+        conn = sqlite3.connect(path)
+        try:
+            with conn:
+                conn.execute(
+                    """
+                    INSERT INTO evidence_cache (school_id, school_name, domain, cards_json, retrieved_at, status)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                    ON CONFLICT(school_id) DO UPDATE SET
+                        school_name = excluded.school_name,
+                        domain = excluded.domain,
+                        cards_json = excluded.cards_json,
+                        retrieved_at = excluded.retrieved_at,
+                        status = excluded.status
+                    """,
+                    (school_id, school_name, domain, cards_str, now_utc, "cached"),
+                )
+        finally:
+            conn.close()
+    except Exception:
+        # safely skip persistence if cache write fails
+        pass

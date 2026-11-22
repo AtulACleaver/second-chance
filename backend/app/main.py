@@ -3,10 +3,12 @@
 
 import os
 from pathlib import Path
+import traceback
 from typing import Any, Dict, List, Literal, Optional
 
-from fastapi import FastAPI, HTTPException, Query, status
+from fastapi import FastAPI, HTTPException, Query, Request, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 # load local environment variables from file if present
@@ -39,6 +41,15 @@ app.add_middleware(
 )
 
 
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(req: Request, exc: Exception) -> JSONResponse:
+    # catch unhandled exceptions and return structured json error
+    return JSONResponse(
+        status_code=500,
+        content={"error": str(exc), "trace": traceback.format_exc()},
+    )
+
+
 class ApplicantProfile(BaseModel):
     # non-sensitive applicant profile choices
     model_config = ConfigDict(extra="forbid")
@@ -59,18 +70,21 @@ class ResearchRequest(BaseModel):
 
 
 @app.get("/api/health")
+@app.get("/health")
 def get_health() -> Dict[str, str]:
     # return simple service health status
     return {"status": "ok"}
 
 
 @app.get("/api/schools")
+@app.get("/schools")
 def get_schools(q: str = Query(default="", max_length=80)) -> Dict[str, Any]:
     # search institutions by name via directory with curated fallbacks
     return search_schools(query=q)
 
 
 @app.post("/api/research")
+@app.post("/research")
 def post_research(req: ResearchRequest) -> Dict[str, Any]:
     # execute source-linked policy research on a selected institution
     sid = req.school_id.strip()
@@ -143,6 +157,7 @@ def post_research(req: ResearchRequest) -> Dict[str, Any]:
 
 
 @app.get("/api/universities")
+@app.get("/universities")
 def get_universities() -> List[Dict[str, Any]]:
     # return curated cards list for default view compatibility
     princeton_card = get_curated_card("curated:princeton")
