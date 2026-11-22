@@ -2946,13 +2946,10 @@ div[id] {
 
 .composer-input-icon {
   position: absolute;
-  left: 12px;
+  left: 14px;
   color: var(--forest-600);
   pointer-events: none;
-}
-
-.composer-input-has-icon {
-  padding-left: 36px;
+  z-index: 2;
 }
 
 .composer-field-help {
@@ -2973,6 +2970,10 @@ div[id] {
   color: var(--text-primary);
   font-family: inherit;
   transition: border-color var(--duration-fast);
+}
+
+.composer-input.composer-input-has-icon {
+  padding-left: 42px;
 }
 
 .composer-input:focus {
