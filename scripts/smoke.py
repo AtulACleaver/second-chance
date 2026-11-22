@@ -130,7 +130,7 @@ def run_smoke_tests(base_url: str = DEFAULT_BASE_URL) -> bool:
         log("5. Gate 2: Unknown Institution Boundary", "FAIL", str(exc))
         all_passed = False
 
-    # 6. Profile Rule: Critical Action Check (Tufts)
+    # 6 profile rule: critical action check for tufts
     try:
         tufts_req = {
             "school_id": "curated:tufts",
@@ -148,7 +148,28 @@ def run_smoke_tests(base_url: str = DEFAULT_BASE_URL) -> bool:
         actions = t_data["cards"][0]["actions"]
         has_critical = any(a.startswith("Action needed:") for a in actions)
         assert has_critical, "Failed to trigger critical action needed warning"
-        log("6. Profile Sensitivity: Tufts Checkbox Alert", "PASS", "Triggered 'Action needed' checkbox reminder")
+
+        # 6b profile-dependent cache check: requested_aid=yes must not return action needed warning
+        tufts_req_yes = {
+            "school_id": "curated:tufts",
+            "profile": {
+                "applicant_type": "first_year",
+                "needs_aid": "yes",
+                "requested_aid": "yes",
+                "entry_year": "2027",
+            },
+            "refresh": False,
+        }
+        r_yes = client.post("/api/research", json=tufts_req_yes)
+        assert r_yes.status_code == 200
+        t_data_yes = r_yes.json()
+        actions_yes = t_data_yes["cards"][0]["actions"]
+        has_critical_yes = any(a.startswith("Action needed:") for a in actions_yes)
+        assert not has_critical_yes, "Cached response leaked 'Action needed' warning into requested_aid=yes profile"
+        has_aid_confirmed = any("indicated an aid request" in a for a in actions_yes)
+        assert has_aid_confirmed, "Expected confirmation of aid request action"
+
+        log("6. Profile Sensitivity: Tufts Checkbox Alert", "PASS", "Dynamic profile actions generated correctly across cache hits")
     except Exception as exc:
         log("6. Profile Sensitivity: Tufts Checkbox Alert", "FAIL", str(exc))
         all_passed = False
