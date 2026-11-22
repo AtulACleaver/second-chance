@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { createRoot } from 'react-dom/client';
+import { createPortal } from 'react-dom';
 import {
   ArrowRight, ArrowLeft, Search, ExternalLink, MapPin, Link as LinkIcon,
   RefreshCw, FileText, CircleCheck, CalendarDays, UserRound, Layers3,
@@ -1033,6 +1034,16 @@ function EmailComposerModal({
     return body;
   }, [schoolName, selectedQuestions, includeSources, sources]);
 
+  useEffect(() => {
+    if (isOpen) {
+      const origOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = origOverflow;
+      };
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const handleCopy = () => {
@@ -1042,7 +1053,7 @@ function EmailComposerModal({
 
   const mailtoUrl = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(emailText)}`;
 
-  return (
+  return createPortal(
     <div className="modal-overlay" onClick={onClose} role="dialog" aria-modal="true">
       <div className="modal-dialog composer-modal-dialog" onClick={e => e.stopPropagation()}>
         <div className="composer-modal-header">
@@ -1164,7 +1175,8 @@ function EmailComposerModal({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -1286,7 +1298,7 @@ function OperatorPortalModal({ isOpen, onClose, initialDraft }) {
 
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div className="modal-backdrop" onClick={onClose} role="dialog" aria-modal="true">
       <div className="modal-window" style={{ maxWidth: 760, maxHeight: '92vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
         <div className="modal-header">
@@ -1537,7 +1549,8 @@ function OperatorPortalModal({ isOpen, onClose, initialDraft }) {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 

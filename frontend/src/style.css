@@ -107,7 +107,7 @@
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: none;
   }
 }
 
@@ -125,7 +125,7 @@
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: none;
   }
 }
 
@@ -141,7 +141,7 @@
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: none;
   }
 }
 
@@ -2440,12 +2440,21 @@ div[id] {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(4, 28, 17, 0.45);
-  backdrop-filter: blur(4px);
-  z-index: 1000;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(4, 28, 17, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 9999;
   display: grid;
   place-items: center;
   padding: 20px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   animation: modal-fade 0.2s var(--ease-out);
 }
 
@@ -2760,7 +2769,7 @@ div[id] {
 .composer-modal-dialog {
   max-width: 680px;
   width: 100%;
-  max-height: 90vh;
+  max-height: min(90vh, 760px);
   display: flex;
   flex-direction: column;
   padding: 0;
@@ -2769,6 +2778,9 @@ div[id] {
   background: #ffffff;
   border: 1px solid var(--border-light);
   box-shadow: 0 20px 45px rgba(4, 28, 17, 0.22);
+  margin: auto;
+  position: relative;
+  z-index: 10000;
 }
 
 .composer-modal-header {
