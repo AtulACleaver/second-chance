@@ -2,11 +2,22 @@
 # provides health search and source-linked research endpoints
 
 import os
+from pathlib import Path
 from typing import Any, Dict, List, Literal, Optional
 
 from fastapi import FastAPI, HTTPException, Query, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, ConfigDict, Field
+
+# load local environment variables from file if present
+env_file = Path(__file__).resolve().parents[2] / ".env"
+if env_file.exists():
+    with open(env_file, encoding="utf-8") as f:
+        for raw_line in f:
+            clean_line = raw_line.strip()
+            if clean_line and not clean_line.startswith("#") and "=" in clean_line:
+                env_key, env_val = clean_line.split("=", 1)
+                os.environ.setdefault(env_key.strip(), env_val.strip())
 
 from .cache import get_cached_record, set_cached_record
 from .directory import resolve_school_identity, search_schools

@@ -207,7 +207,7 @@ def search_tavily_leads(
     client: Optional[httpx.Client] = None,
 ) -> List[str]:
     # perform basic tavily search restricted strictly to the verified school domain
-    key = api_key or os.getenv("TAVILY_API_KEY", "").strip()
+    key = api_key if api_key is not None else os.getenv("TAVILY_API_KEY", "").strip()
     if not key:
         return []
 

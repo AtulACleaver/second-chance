@@ -118,7 +118,7 @@ def search_schools(
         return {"status": "ok", "candidates": []}
 
     curated_matches = search_curated(clean_query)
-    scorecard_key = api_key or os.getenv("SCORECARD_API_KEY", "").strip()
+    scorecard_key = api_key if api_key is not None else os.getenv("SCORECARD_API_KEY", "").strip()
 
     # if no scorecard api key is configured, return curated matches or explicit unavailable
     if not scorecard_key:
@@ -238,7 +238,7 @@ def resolve_school_identity(
     # 2 scorecard id resolution
     if sid.startswith("scorecard:"):
         numeric_id = sid.split(":", 1)[1]
-        scorecard_key = api_key or os.getenv("SCORECARD_API_KEY", "").strip()
+        scorecard_key = api_key if api_key is not None else os.getenv("SCORECARD_API_KEY", "").strip()
         if not scorecard_key:
             return None
 
