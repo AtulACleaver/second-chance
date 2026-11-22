@@ -960,10 +960,19 @@ a {
    LANDING: 3-STEP ANIMATED TIMELINE
    ========================================================================== */
 
+#how,
+#trust,
+#questions-section,
+section[id],
+div[id] {
+  scroll-margin-top: 100px;
+}
+
 .timeline-section {
   max-width: 1120px;
   margin: 100px auto 70px;
   padding: 0 24px;
+  scroll-margin-top: 100px;
 }
 
 .section-eyebrow {
@@ -1044,6 +1053,7 @@ a {
   border-top: 1px solid var(--border-light);
   border-bottom: 1px solid var(--border-light);
   padding: 90px 24px;
+  scroll-margin-top: 100px;
 }
 
 .trust-inner {
@@ -1860,6 +1870,7 @@ a {
   margin-top: 36px;
   padding-top: 36px;
   border-top: 1px solid var(--border-light);
+  scroll-margin-top: 100px;
 }
 
 .questions-header-bar {
