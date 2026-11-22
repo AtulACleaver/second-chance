@@ -13,3 +13,7 @@ __pycache__/
 tests/
 **/tests/
 test_*.py
+debug*
+test
+test.c
+test2*

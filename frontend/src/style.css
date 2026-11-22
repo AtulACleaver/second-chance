@@ -1,5 +1,5 @@
 /* ==========================================================================
-   SECOND CHANCE — DESIGN SYSTEM TOKENS & STYLES
+   SECOND CHANCE: DESIGN SYSTEM TOKENS & STYLES
    ========================================================================== */
 
 :root {
@@ -2308,9 +2308,24 @@ a {
   font-size: 13px;
   font-weight: 600;
   color: var(--text-secondary);
+  align-items: center;
 }
 
-.footer-nav-links a:hover {
+.footer-nav-links a,
+.footer-nav-links button {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: color var(--duration-fast);
+}
+
+.footer-nav-links a:hover,
+.footer-nav-links button:hover {
   color: var(--forest-700);
 }
 
