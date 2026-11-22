@@ -36,6 +36,7 @@ We built **Second Chance** to help other students find the details and ask bette
 | **Find a university** | Search by name and choose the matching institution. |
 | **Read the evidence** | Explore source-linked passages, review status and retrieval details when available. |
 | **See what to check** | Review next steps and questions relevant to the information returned. |
+| **Compose an inquiry** | Prepare an editable inquiry email citing official sources, with clear safety guardrails. |
 | **Take the questions with you** | Copy or export the checklist before speaking with a university. |
 
 > [!IMPORTANT]
@@ -106,8 +107,12 @@ Edit the root `.env` file. Never commit API keys.
 | `SCORECARD_API_KEY` | Enables broader university directory searches. |
 | `TAVILY_API_KEY` | Enables discovery of official pages for non-curated schools. |
 | `CACHE_PATH` | Sets the local SQLite cache path. |
+| `ENABLE_OPERATOR_API` | Enables private operator endpoints (`/api/operator`) for testing (`true` or `false`). |
+| `OPERATOR_TOKEN` | Bearer token protecting operator endpoints. |
+| `AGENTBOXD_API_KEY` | API key for Agentboxd draft integration. |
+| `AGENTBOXD_INBOX_ID` | Designated inbox ID for test inquiry drafts. |
 
-The app can run without the first two keys, but its coverage is limited. See [`.env.example`](.env.example) for the full list of settings.
+The app can run without the external keys, defaulting to curated records and local operations. See [`.env.example`](.env.example) for the full list of settings.
 
 ### Run the checks
 
@@ -115,6 +120,7 @@ The app can run without the first two keys, but its coverage is limited. See [`.
 # From the repository root, with the backend virtual environment active
 (cd backend && python -m pytest -q)
 python evaluation/run.py
+python evaluation/agentboxd_checks.py
 
 # Frontend production build
 (cd frontend && npm run build)
@@ -136,9 +142,14 @@ The evaluation uses fictional profiles and boundary checks. It is a regression t
 
 **API at a glance:** `GET /api/health` checks service health, `GET /api/schools?q=...` searches the directory, and `POST /api/research` returns source-linked research for a selected school. See the [contract](docs/CONTRACT.md) for request fields and response states.
 
-### Agentboxd experiment
+### Agentboxd integration
 
-The repository includes an **operator-assisted draft demo**: export questions from the app and use a local script to prepare an unaddressed Agentboxd draft. It does not automatically send email and is not a public student messaging system. Account access and a real provider test are required. See [setup and limitations](docs/AGENTBOXD.md).
+Second Chance connects student research to institutional follow-up through a two-tier workflow:
+
+1. **Client-side inquiry composer:** An in-browser tool that formats selected policy questions into an editable email draft citing verified official source URLs, complete with safety guardrails (reminding applicants never to share financial documents, passwords, or SSNs).
+2. **Protected operator portal:** A private, authenticated team demo workflow (`/api/operator`) that creates unaddressed, unsent drafts in Agentboxd (`POST /v1/inboxes/:id/drafts`) for mandatory human operator review. It is disabled by default, requires a Bearer token, and never sends email automatically.
+
+For the security boundaries, API contract, and multi-user roadmap, see [Agentboxd documentation](docs/AGENTBOXD.md).
 
 ## Team
 
