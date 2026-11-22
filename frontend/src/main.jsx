@@ -250,11 +250,11 @@ function ProductPreview({ onOpen }) {
             <Logo />
             <div className="side-tab active"><Search size={14} /> Research</div>
             <div className="side-tab"><CalendarDays size={14} /> History</div>
-            <div className="side-tab"><ShieldCheck size={14} /> Verified Sources</div>
+            <div className="side-tab"><ShieldCheck size={14} /> Official Sources</div>
           </aside>
           
           <div className="preview-main-body">
-            <div className="preview-crumb">Research <span>›</span> Cornell University <span>›</span> Financial Aid</div>
+            <div className="preview-crumb">Illustrative Example <span>›</span> Cornell University <span>›</span> Financial Aid</div>
             <div className="preview-title-bar">
               <div>
                 <h3>Cornell University</h3>
@@ -263,16 +263,16 @@ function ProductPreview({ onOpen }) {
                   <LinkIcon size={12} /> cornell.edu
                 </div>
               </div>
-              <Tooltip text="Recently retrieved from official university pages">
-                <span className="badge badge-fresh">
-                  <span className="badge-fresh-dot" /> Fresh
+              <Tooltip text="Illustrative example demonstrating how research results appear">
+                <span className="badge badge-scope">
+                  Illustrative Example
                 </span>
               </Tooltip>
             </div>
 
             <div className="preview-stats-grid">
               <div className="preview-box summary">
-                <h4>What we found</h4>
+                <h4>Sample findings</h4>
                 <p>
                   Official pages confirm Cornell meets <mark className="highlighter">100% of demonstrated need</mark> for all admitted international undergraduates.
                 </p>
@@ -285,7 +285,7 @@ function ProductPreview({ onOpen }) {
               <div className="preview-box preview-stat-card">
                 <CircleCheck />
                 <strong>1 Reviewed</strong>
-                <span>2 Portal Excerpts</span>
+                <span>By our team</span>
               </div>
               <div className="preview-box preview-stat-card">
                 <CalendarDays />
@@ -404,7 +404,7 @@ function Home({ onExplore, onNavigateSection }) {
               <div className="timeline-badge">02</div>
               <h3>Review source-linked evidence</h3>
               <p>
-                Read exact quotations extracted directly from verified financial-aid pages, complete with review status and scope.
+                Read exact quotations extracted directly from official financial-aid pages, complete with review status and scope.
               </p>
             </article>
 
@@ -431,7 +431,7 @@ function Home({ onExplore, onNavigateSection }) {
                 </div>
                 <h4>Official sources only</h4>
                 <p>
-                  We fetch information strictly from verified .edu university portals and official financial-aid offices. No forum rumors or third-party guesses.
+                  We gather information strictly from official .edu university portals and financial-aid offices. No forum rumors or third-party speculation.
                 </p>
               </div>
 
@@ -439,9 +439,9 @@ function Home({ onExplore, onNavigateSection }) {
                 <div className="trust-icon-box">
                   <ShieldCheck size={22} />
                 </div>
-                <h4>Every claim linked to evidence</h4>
+                <h4>Source-linked quotations</h4>
                 <p>
-                  Every summary statement links to the exact source passage and original URL, so you can inspect the full policy in its original context.
+                  Policy summaries link directly to exact quotations and original university URLs, so you can inspect every rule in its official context.
                 </p>
               </div>
 
@@ -449,9 +449,9 @@ function Home({ onExplore, onNavigateSection }) {
                 <div className="trust-icon-box">
                   <Eye size={22} />
                 </div>
-                <h4>Reviewed vs Unreviewed labels</h4>
+                <h4>Transparent review labels</h4>
                 <p>
-                  We are transparent about data verification. Human-checked quotes are marked green; direct portal excerpts are clearly flagged for caution.
+                  Passages reviewed by our team are clearly distinguished from direct portal excerpts, so you always know which conditions require manual follow-up.
                 </p>
               </div>
             </div>
@@ -465,8 +465,8 @@ function Home({ onExplore, onNavigateSection }) {
             <span>Official .edu sources</span>
           </div>
           <div className="metric-tile">
-            <strong>50+</strong>
-            <span>Verified university policies</span>
+            <strong>Direct</strong>
+            <span>Official policy citations</span>
           </div>
           <div className="metric-tile">
             <strong>3-Step</strong>
@@ -474,7 +474,7 @@ function Home({ onExplore, onNavigateSection }) {
           </div>
           <div className="metric-tile">
             <strong>0</strong>
-            <span>Ads, cookies or guesswork</span>
+            <span>Ads, tracking or guesswork</span>
           </div>
         </section>
 
@@ -482,7 +482,7 @@ function Home({ onExplore, onNavigateSection }) {
         <section className="cta-band">
           <h2>Make the fine print easier to navigate.</h2>
           <p>
-            Join thousands of international applicants getting source-backed confidence on university financial aid.
+            Explore official policy conditions and prepare the exact questions to ask your admissions office.
           </p>
           <button className="btn btn-secondary btn-lg" onClick={onExplore}>
             Explore Universities Now <ArrowRight size={18} />
@@ -513,7 +513,7 @@ function SearchPage({ onBack, onSelect, onNavigateSection }) {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState([]);
   const [searched, setSearched] = useState(false);
-  const [loadingMessage, setLoadingMessage] = useState('Looking through verified university directory...');
+  const [loadingMessage, setLoadingMessage] = useState('Searching university directory...');
   const [suggestions, setSuggestions] = useState([]);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -550,7 +550,7 @@ function SearchPage({ onBack, onSelect, onNavigateSection }) {
     setLoading(true);
     setSearched(false);
     setSearchError(null);
-    setLoadingMessage('Looking through verified university directory...');
+    setLoadingMessage('Searching university directory...');
 
     try {
       const data = await searchSchools(q);
@@ -731,7 +731,7 @@ function SearchPage({ onBack, onSelect, onNavigateSection }) {
                   <span>{school.location || ''} · {school.domain || ''}</span>
                 </div>
                 <span className="verified-domain-pill">
-                  <ShieldCheck size={14} /> {school.domain_status === 'curated' ? 'Curated source' : 'Domain verified'}
+                  <ShieldCheck size={14} /> {school.domain_status === 'curated' ? 'Curated source' : 'Directory domain'}
                 </span>
                 <ArrowRight size={18} style={{ color: 'var(--forest-600)', marginLeft: 'auto' }} />
               </button>
@@ -799,9 +799,9 @@ function StatusBadge({ status }) {
 function ReviewBadge({ reviewStatus }) {
   if (reviewStatus === 'team_reviewed') {
     return (
-      <Tooltip text="Reviewed and cross-checked by university research staff">
+      <Tooltip text="Reviewed and cross-checked by our team against official sources">
         <span className="badge badge-reviewed">
-          <CircleCheck size={14} /> Staff-reviewed
+          <CircleCheck size={14} /> Reviewed by our team
         </span>
       </Tooltip>
     );
@@ -977,9 +977,9 @@ function Dashboard({ onBack, onNewSearch, selectedSchool, onNavigateSection }) {
       try {
         const d = new Date(evidence[0].retrieved_at);
         return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-      } catch { return 'Recently verified'; }
+      } catch { return 'Recently checked'; }
     }
-    return 'Recently verified';
+    return 'Recently checked';
   }, [evidence]);
 
   const toggleAsked = (id) => {
@@ -1030,6 +1030,28 @@ function Dashboard({ onBack, onNewSearch, selectedSchool, onNavigateSection }) {
     addToast('Checklist exported successfully');
   };
 
+  // Export only the student's unanswered questions and source links, not their profile.
+  // Agentboxd is an operator-assisted demo; this button does not contact its API.
+  const handleExportAgentboxdHandoff = () => {
+    const questions = dynamicQuestions.filter(q => !askedQuestions.has(q.id)).map(q => q.question);
+    if (!questions.length) {
+      addToast('Uncheck at least one question to prepare a draft', 'info');
+      return;
+    }
+    const sources = [...new Set(evidence.map(item => item.source_url).filter(url => {
+      try { return new URL(url).protocol === 'https:'; } catch { return false; }
+    }))];
+    const handoff = { version: 1, school: schoolName, questions, sources };
+    const blob = new Blob([JSON.stringify(handoff, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'second-chance-agentboxd-handoff.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    addToast('Question handoff exported. No email was sent.');
+  };
+
   const handleRefresh = async () => {
     setRefreshing(true);
     await doResearch(true);
@@ -1055,7 +1077,7 @@ function Dashboard({ onBack, onNewSearch, selectedSchool, onNavigateSection }) {
           <div className="loading-indicator-box" style={{ marginTop: 80 }}>
             <div className="loading-spinner-ring" />
             <p>Researching {school.name} financial-aid policies...</p>
-            <small style={{ color: 'var(--text-tertiary)' }}>Fetching evidence from verified university portals</small>
+            <small style={{ color: 'var(--text-tertiary)' }}>Fetching evidence from official university portals</small>
           </div>
         </main>
       </>
@@ -1123,7 +1145,7 @@ function Dashboard({ onBack, onNewSearch, selectedSchool, onNavigateSection }) {
                   {schoolDomain} <ExternalLink size={12} />
                 </a>
               </span>
-              <Tooltip text="Verified official institution directory">
+              <Tooltip text="Official institution directory domain">
                 <span className="badge badge-scope">
                   <ShieldCheck size={13} /> Official Domain
                 </span>
@@ -1135,7 +1157,7 @@ function Dashboard({ onBack, onNewSearch, selectedSchool, onNavigateSection }) {
             <StatusBadge status={researchStatus} />
 
             <div className="research-meta-text">
-              <strong>{researchMessage || 'Policy verified'}</strong>
+              <strong>{researchMessage || 'Policy records loaded'}</strong>
               <small>{lastUpdated}</small>
             </div>
 
@@ -1146,7 +1168,7 @@ function Dashboard({ onBack, onNewSearch, selectedSchool, onNavigateSection }) {
               aria-label="Refresh financial aid data"
             >
               <RefreshCw size={15} className={refreshing ? 'spin' : ''} />
-              <span>{refreshing ? 'Verifying...' : 'Refresh'}</span>
+              <span>{refreshing ? 'Checking...' : 'Refresh'}</span>
             </button>
           </div>
         </header>
@@ -1184,7 +1206,7 @@ function Dashboard({ onBack, onNewSearch, selectedSchool, onNavigateSection }) {
                         {card.tagline}{' '}
                         {evidence.length > 0 && (
                           <>
-                            Verified through <mark className="highlighter">{evidence.length} official source passage{evidence.length !== 1 ? 's' : ''}</mark> directly from university publications.
+                            Drawn from <mark className="highlighter">{evidence.length} official source passage{evidence.length !== 1 ? 's' : ''}</mark> directly from university publications.
                           </>
                         )}
                       </>
@@ -1206,14 +1228,14 @@ function Dashboard({ onBack, onNewSearch, selectedSchool, onNavigateSection }) {
                     </div>
                   </div>
 
-                  <Tooltip text={`${reviewedEvidenceCount} staff-reviewed passage${reviewedEvidenceCount !== 1 ? 's' : ''}, ${unreviewedEvidenceCount} portal excerpt${unreviewedEvidenceCount !== 1 ? 's' : ''}`}>
+                  <Tooltip text={`${reviewedEvidenceCount} passage${reviewedEvidenceCount !== 1 ? 's' : ''} reviewed by our team, ${unreviewedEvidenceCount} direct portal excerpt${unreviewedEvidenceCount !== 1 ? 's' : ''}`}>
                     <div className="stat-tile-card">
                       <div className="stat-tile-icon-box">
                         <CircleCheck size={22} />
                       </div>
                       <div className="stat-tile-content">
                         <span className="stat-tile-number">{reviewedCount} Reviewed</span>
-                        <span className="stat-tile-label">({unreviewedEvidenceCount} excerpts)</span>
+                        <span className="stat-tile-label">by our team</span>
                       </div>
                     </div>
                   </Tooltip>
@@ -1228,31 +1250,6 @@ function Dashboard({ onBack, onNewSearch, selectedSchool, onNavigateSection }) {
                     </div>
                   </div>
                 </div>
-
-                {/* Quality Indicator */}
-                {evidence.length > 0 && (
-                  <div className="quality-indicator-card">
-                    <div className="quality-text-group">
-                      <span className="quality-title">
-                        <ShieldCheck size={16} /> Confidence & Evidence Quality
-                      </span>
-                      <span className="quality-desc">
-                        {reviewedEvidenceCount} of {evidence.length} passages verified by staff · {unreviewedEvidenceCount} direct portal citations
-                      </span>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <div className="quality-meter-bar">
-                        <div
-                          className="quality-meter-fill"
-                          style={{ width: `${evidence.length > 0 ? Math.round((reviewedEvidenceCount / evidence.length) * 100) : 0}%` }}
-                        />
-                      </div>
-                      <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--forest-700)' }}>
-                        {reviewedEvidenceCount > 0 ? 'High' : 'Moderate'}
-                      </span>
-                    </div>
-                  </div>
-                )}
 
                 {/* Key Evidence Card */}
                 {evidence.length > 0 && (
@@ -1295,7 +1292,7 @@ function Dashboard({ onBack, onNewSearch, selectedSchool, onNavigateSection }) {
                   <div className="empty-state-card">
                     <HelpCircle />
                     <h3>No evidence passages</h3>
-                    <p>No verified policy passages are currently recorded for this school.</p>
+                    <p>No policy passages are currently recorded for this school.</p>
                   </div>
                 )}
               </div>
@@ -1308,7 +1305,7 @@ function Dashboard({ onBack, onNewSearch, selectedSchool, onNavigateSection }) {
                   <div className="questions-heading-col">
                     <h2>Next Questions to Ask</h2>
                     <p>
-                      Curated questions to verify directly with {schoolName}'s financial-aid office.
+                      Curated questions to verify directly with {schoolName}'s financial-aid office. The Agentboxd export is an operator-assisted demo, not an automatic email.
                     </p>
                   </div>
 
@@ -1337,6 +1334,9 @@ function Dashboard({ onBack, onNewSearch, selectedSchool, onNavigateSection }) {
                     </button>
                     <button className="btn btn-primary btn-sm" onClick={handleExportChecklist}>
                       <Download size={14} /> Export checklist
+                    </button>
+                    <button className="btn btn-secondary btn-sm" onClick={handleExportAgentboxdHandoff}>
+                      <Download size={14} /> Export for Agentboxd demo
                     </button>
                   </div>
                 </div>

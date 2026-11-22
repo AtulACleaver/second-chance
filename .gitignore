@@ -10,9 +10,6 @@ __pycache__/
 !.env.example
 /desktop.png
 /mobile.png
-tests/
-**/tests/
-test_*.py
 debug*
 test
 test.c

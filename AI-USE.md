@@ -73,3 +73,7 @@ second-chance/
 ├── scripts/                      # Aryan: smoke test and optional sponsor draft
 └── .github/workflows/            # Aryan: CI after tests and builds exist
 ```
+
+## Agentboxd draft workflow
+
+Notion AI assisted with the research-page export, Agentboxd draft script, documentation, and offline checks. The team must review and explain this code, record its actual contributions, and verify the provider connection before representing it as live.
