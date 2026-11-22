@@ -161,6 +161,13 @@ function Nav({ onHome, onExplore, onNavigateSection, onOpenOperator, active = 'h
             <button
               type="button"
               className="nav-link-item"
+              onClick={() => handleSection('inquiry')}
+            >
+              Inquiry Flow
+            </button>
+            <button
+              type="button"
+              className="nav-link-item"
               onClick={() => handleSection('trust')}
             >
               Why Trust Us
@@ -221,6 +228,12 @@ function Nav({ onHome, onExplore, onNavigateSection, onOpenOperator, active = 'h
           onClick={() => handleSection('how')}
         >
           How It Works
+        </button>
+        <button
+          className="btn btn-ghost btn-md"
+          onClick={() => handleSection('inquiry')}
+        >
+          Inquiry Flow
         </button>
         <button
           className="btn btn-ghost btn-md"
@@ -400,7 +413,7 @@ function Home({ onExplore, onNavigateSection, onOpenOperator }) {
                 <ShieldCheck size={16} /> Direct source citations
               </div>
               <div className="trust-chip">
-                <Zap size={16} /> Actionable next questions
+                <Mail size={16} /> Agentboxd inquiry drafting
               </div>
             </div>
 
@@ -438,6 +451,104 @@ function Home({ onExplore, onNavigateSection, onOpenOperator }) {
                 Get curated, contextual questions formatted specifically for your applicant type to ask the financial-aid office.
               </p>
             </article>
+          </div>
+        </section>
+
+        {/* Section 2: The Inquiry Process (Powered by Agentboxd) */}
+        <section className="inquiry-section" id="inquiry">
+          <div className="inquiry-inner">
+            <div className="section-eyebrow">THE INQUIRY PROCESS</div>
+            <h2 className="section-heading-lg">From policy research to the right email.</h2>
+            <p className="inquiry-lead-text">
+              Finding complex fine-print conditions is only the first step. When you need confirmation from an admissions office, here is how the inquiry process works in simple terms.
+            </p>
+
+            <div className="inquiry-grid">
+              <article className="inquiry-card">
+                <div className="inquiry-step-header">
+                  <div className="inquiry-badge">01</div>
+                  <div className="inquiry-icon-wrap">
+                    <CheckSquare size={18} />
+                  </div>
+                </div>
+                <h3>1. Select your questions</h3>
+                <p>
+                  As you read a university's policy evidence, choose the exact questions or deadlines you want to verify with their financial aid team.
+                </p>
+              </article>
+
+              <article className="inquiry-card featured">
+                <div className="inquiry-step-header">
+                  <div className="inquiry-badge featured">02</div>
+                  <div className="inquiry-icon-wrap featured">
+                    <Mail size={18} />
+                  </div>
+                </div>
+                <div className="inquiry-tool-pill">
+                  <Sparkles size={12} /> Powered by Agentboxd
+                </div>
+                <h3>2. Get a ready-to-edit draft</h3>
+                <p>
+                  Instead of struggling with what to write, Agentboxd automatically drafts a polite, professional email quoting the verified official .edu pages.
+                </p>
+              </article>
+
+              <article className="inquiry-card">
+                <div className="inquiry-step-header">
+                  <div className="inquiry-badge">03</div>
+                  <div className="inquiry-icon-wrap">
+                    <ShieldCheck size={18} />
+                  </div>
+                </div>
+                <h3>3. Review safely & reach out</h3>
+                <p>
+                  Clear safety guardrails remind you never to attach bank statements, tax IDs, or passwords. Copy the draft to your inbox with one click.
+                </p>
+              </article>
+            </div>
+
+            {/* Illustrative sample preview card */}
+            <div className="inquiry-preview-card">
+              <div className="inquiry-preview-header">
+                <div className="inquiry-preview-title">
+                  <MessageCircle size={16} />
+                  <span>How an inquiry draft looks</span>
+                </div>
+                <span className="inquiry-tag">Official Citations Included</span>
+              </div>
+              
+              <div className="inquiry-preview-content">
+                <div className="inquiry-meta-row">
+                  <span className="inquiry-meta-label">Subject:</span>
+                  <span className="inquiry-meta-value">Inquiry regarding International Aid Application Deadlines · Cornell University</span>
+                </div>
+                <div className="inquiry-body-snippet">
+                  <p>Dear Financial Aid Office,</p>
+                  <p>
+                    I am applying as an international prospective student. According to your official portal (<em>finaid.cornell.edu</em>), grant aid requires submitting the CSS Profile at the time of admission. Could you please clarify:
+                  </p>
+                  <ul>
+                    <li>If the CSS Profile fee waiver can be requested prior to the application deadline?</li>
+                    <li>Whether international students admitted without aid can qualify in later years?</li>
+                  </ul>
+                  <p className="inquiry-signoff">Thank you for your guidance,</p>
+                </div>
+              </div>
+
+              <div className="inquiry-preview-footer">
+                <div className="inquiry-footer-safety">
+                  <Lock size={13} />
+                  <span>Built-in privacy check: never transmits passwords, bank account numbers, or tax forms</span>
+                </div>
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  onClick={onExplore}
+                >
+                  Try an Inquiry in Research <ArrowRight size={14} />
+                </button>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -2194,6 +2305,9 @@ function Footer({ onExplore, onNavigateSection }) {
           <nav className="footer-nav-links" aria-label="Footer navigation">
             <button type="button" onClick={() => handleSection('how')}>
               How It Works
+            </button>
+            <button type="button" onClick={() => handleSection('inquiry')}>
+              Inquiry Flow
             </button>
             <button type="button" onClick={() => handleSection('trust')}>
               Why Trust Us
