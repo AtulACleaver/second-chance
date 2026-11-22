@@ -395,7 +395,7 @@ function Home({ onExplore, onNavigateSection, onOpenOperator }) {
                 <ShieldCheck size={16} /> Direct source citations
               </div>
               <div className="trust-chip">
-                <Mail size={16} /> Agentboxd inquiry drafting
+                <Mail size={16} /> Verified inquiry preparation
               </div>
             </div>
 
@@ -470,12 +470,9 @@ function Home({ onExplore, onNavigateSection, onOpenOperator }) {
                     <Mail size={18} />
                   </div>
                 </div>
-                <div className="inquiry-tool-pill">
-                  <Sparkles size={12} /> Powered by Agentboxd
-                </div>
-                <h3>2. Get a ready-to-edit draft</h3>
+                <h3>2. Instant, polite inquiry draft</h3>
                 <p>
-                  Instead of struggling with what to write, Agentboxd automatically drafts a polite, professional email quoting the verified official .edu pages.
+                  Second Chance translates policy conditions into polite, clear questions to the university desk, citing the exact verified source URLs.
                 </p>
               </article>
 
@@ -486,9 +483,12 @@ function Home({ onExplore, onNavigateSection, onOpenOperator }) {
                     <ShieldCheck size={18} />
                   </div>
                 </div>
+                <div className="inquiry-tool-pill">
+                  <Sparkles size={12} /> Agentboxd Sandbox
+                </div>
                 <h3>3. Review safely & reach out</h3>
                 <p>
-                  Clear safety guardrails remind you never to attach bank statements, tax IDs, or passwords. Copy the draft to your inbox with one click.
+                  Strict privacy checks guard your data. Open directly in your mail app, copy to clipboard, or route through our Agentboxd email sandbox for human-reviewed testing.
                 </p>
               </article>
             </div>
@@ -1235,7 +1235,7 @@ function EmailComposerModal({
             <div>
               <div className="composer-title-row">
                 <h3>Prepare Inquiry Email</h3>
-                <span className="composer-tool-tag">Powered by Agentboxd</span>
+                <span className="composer-tool-tag">Inquiry Assistant</span>
               </div>
               <p className="composer-modal-subtitle">
                 Draft a clear, polite inquiry to {schoolName} referencing official policy evidence.
@@ -2234,7 +2234,7 @@ function Dashboard({ onBack, onNewSearch, selectedSchool, onNavigateSection, onO
                   <div className="questions-heading-col">
                     <h2>Next Questions to Ask</h2>
                     <p>
-                      Curated questions to verify directly with {schoolName}'s financial-aid office. The Agentboxd export is an operator-assisted demo, not an automatic email.
+                      Curated questions to verify directly with {schoolName}&apos;s financial-aid office. Use the inquiry composer to draft your outreach with official citations.
                     </p>
                   </div>
 

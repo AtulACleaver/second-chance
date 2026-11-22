@@ -19,28 +19,31 @@ Built for **EvoHacks II** · Projects for Social Good
 
 ---
 
-## Why Agentboxd matters for Second Chance
+## How Inquiry Preparation & Agentboxd Work Together
 
-Finding a hidden policy detail is only half the battle. When an international student discovers that a university requires financial aid applications at the time of admission, their immediate next question is: *what do I write to the university?*
+Finding a hidden policy detail is only half the battle. When an international student discovers that a university requires financial aid applications at the time of admission, their immediate next question is: *how do I ask the university without getting confused or sounding demanding?*
 
-**Agentboxd bridges the gap between policy research and real-world institutional communication.** Instead of leaving students with a blank screen, Second Chance uses an Agentboxd-powered workflow to transform source-linked evidence into structured, editable inquiry drafts with clear safety boundaries.
+Second Chance addresses this through two coordinated layers:
+
+1. **Student-Facing Inquiry Composer:** Translates complex fine-print conditions into clear, polite, natural questions addressed to the university's official financial aid desk (e.g., `finaid@cornell.edu`), accompanied by exact source links and privacy guardrails.
+2. **Agentboxd Agent Sandbox & Mailbox API:** Agentboxd (`https://api.agentboxd.com`) provides programmatic email inboxes for AI agent workflows. In Second Chance, Agentboxd serves as an **isolated communication sandbox** for operator testing (`/api/operator`). Rather than allowing autonomous agents to fire off unverified emails to university admissions offices, our backend saves drafts unaddressed (`POST /v1/inboxes/:id/drafts`) and inspects test replies (`GET /v1/inboxes/:id/threads`) under mandatory human review.
 
 ```mermaid
 flowchart LR
-    A["Policy Evidence"] --> B["Select Questions"]
-    B --> C["Inquiry Composer"]
-    C --> D["Editable Draft + Citations"]
-    D --> E["Student Copies Draft"]
-    D --> F["Operator Demo"]
-    F --> G["Unaddressed Agentboxd Draft"]
-    G --> H["Human Review & Send"]
+    A["Verified Policy Evidence"] --> B["Select Questions"]
+    B --> C["Inquiry Assistant"]
+    C --> D["Polite Draft + Source Links"]
+    D --> E["Student: Open in Mail App / Copy"]
+    D --> F["Operator Sandbox: POST /drafts"]
+    F --> G["Agentboxd Inbox"]
+    G --> H["Human Review & Test Loop"]
 ```
 
-- **Grounding in real sources:** The draft cites the exact university source URLs found during research so admissions counselors know precisely which policy is being referenced.
-- **Privacy guardrails:** The composer reminds applicants never to attach tax forms, passwords, bank account details, or sensitive financial documents to preliminary inquiries.
-- **Human-in-the-loop review:** In the team operator workflow, drafts are created unaddressed in Agentboxd (`POST /v1/inboxes/:id/drafts`). No email is ever sent or scheduled automatically without human review.
+- **Natural student phrasing:** Translates internal research checklists into respectful, professional questions suited for financial aid deans.
+- **Privacy guardrails:** Warns applicants never to send tax forms, passwords, bank account numbers, or national identity documents in initial inquiries.
+- **Zero auto-spam:** In the agent/operator workflow, no email is ever sent or scheduled automatically. It requires explicit human review in the Agentboxd dashboard.
 
-See the [Agentboxd integration architecture and safety model](docs/AGENTBOXD.md) for full details.
+See the [Agentboxd integration architecture and safety model](docs/AGENTBOXD.md) for full technical details.
 
 ---
 
@@ -171,7 +174,7 @@ The evaluation uses fictional profiles and boundary checks. It is a regression t
 
 Second Chance connects student research to institutional follow-up through a two-tier workflow:
 
-1. **Client-side inquiry composer:** An in-browser tool that formats selected policy questions into an editable email draft citing verified official source URLs, complete with safety guardrails (reminding applicants never to share financial documents, passwords, or SSNs).
+1. **Client-side inquiry assistant:** An in-browser tool that formats selected policy questions into an editable email draft with resolved official university desk addresses and verified source citations, complete with safety guardrails (reminding applicants never to share financial documents, passwords, or SSNs).
 2. **Protected operator portal:** A private, authenticated team demo workflow (`/api/operator`) that creates unaddressed, unsent drafts in Agentboxd (`POST /v1/inboxes/:id/drafts`) for mandatory human operator review. It is disabled by default, requires a Bearer token, and never sends email automatically.
 
 For the security boundaries, API contract, and multi-user roadmap, see [Agentboxd documentation](docs/AGENTBOXD.md).
