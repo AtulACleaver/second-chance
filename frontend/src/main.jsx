@@ -406,8 +406,10 @@ function Home({ onExplore, onNavigateSection, onOpenOperator }) {
 
         {/* Section 1: 3-Step Timeline ("How It Works") */}
         <section className="timeline-section" id="how">
-          <div className="section-eyebrow">HOW IT WORKS</div>
-          <h2 className="section-heading-lg">Clarity at every step of your research.</h2>
+          <div className="section-header-center">
+            <div className="section-eyebrow">HOW IT WORKS</div>
+            <h2 className="section-heading-lg">Clarity at every step of your research.</h2>
+          </div>
 
           <div className="timeline-grid">
             <article className="timeline-card">
@@ -439,11 +441,13 @@ function Home({ onExplore, onNavigateSection, onOpenOperator }) {
         {/* Section 2: The Inquiry Process (Powered by Agentboxd) */}
         <section className="inquiry-section" id="inquiry">
           <div className="inquiry-inner">
-            <div className="section-eyebrow">THE INQUIRY PROCESS</div>
-            <h2 className="section-heading-lg">From policy research to the right email.</h2>
-            <p className="inquiry-lead-text">
-              Finding complex fine-print conditions is only the first step. When you need confirmation from an admissions office, here is how the inquiry process works in simple terms.
-            </p>
+            <div className="section-header-center">
+              <div className="section-eyebrow">THE INQUIRY PROCESS</div>
+              <h2 className="section-heading-lg">From policy research to the right email.</h2>
+              <p className="inquiry-lead-text">
+                Finding complex fine-print conditions is only the first step. When you need confirmation from an admissions office, here is how the inquiry process works in simple terms.
+              </p>
+            </div>
 
             <div className="inquiry-grid">
               <article className="inquiry-card">
@@ -534,11 +538,13 @@ function Home({ onExplore, onNavigateSection, onOpenOperator }) {
           </div>
         </section>
 
-        {/* Section 2: Why Trust Second Chance */}
+        {/* Section 3: Why Trust Second Chance */}
         <section className="trust-section" id="trust">
           <div className="trust-inner">
-            <div className="section-eyebrow">WHY TRUST SECOND CHANCE</div>
-            <h2 className="section-heading-lg">Evidence you can independently verify.</h2>
+            <div className="section-header-center">
+              <div className="section-eyebrow">WHY TRUST SECOND CHANCE</div>
+              <h2 className="section-heading-lg">Evidence you can independently verify.</h2>
+            </div>
 
             <div className="trust-grid">
               <div className="trust-item">
