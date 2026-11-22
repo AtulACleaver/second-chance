@@ -19,6 +19,31 @@ Built for **EvoHacks II** · Projects for Social Good
 
 ---
 
+## Why Agentboxd matters for Second Chance
+
+Finding a hidden policy detail is only half the battle. When an international student discovers that a university requires financial aid applications at the time of admission, their immediate next question is: *what do I write to the university?*
+
+**Agentboxd bridges the gap between policy research and real-world institutional communication.** Instead of leaving students with a blank screen, Second Chance uses an Agentboxd-powered workflow to transform source-linked evidence into structured, editable inquiry drafts with clear safety boundaries.
+
+```mermaid
+flowchart LR
+    A["Policy Evidence"] --> B["Select Questions"]
+    B --> C["Inquiry Composer"]
+    C --> D["Editable Draft + Citations"]
+    D --> E["Student Copies Draft"]
+    D --> F["Operator Demo"]
+    F --> G["Unaddressed Agentboxd Draft"]
+    G --> H["Human Review & Send"]
+```
+
+- **Grounding in real sources:** The draft cites the exact university source URLs found during research so admissions counselors know precisely which policy is being referenced.
+- **Privacy guardrails:** The composer reminds applicants never to attach tax forms, passwords, bank account details, or sensitive financial documents to preliminary inquiries.
+- **Human-in-the-loop review:** In the team operator workflow, drafts are created unaddressed in Agentboxd (`POST /v1/inboxes/:id/drafts`). No email is ever sent or scheduled automatically without human review.
+
+See the [Agentboxd integration architecture and safety model](docs/AGENTBOXD.md) for full details.
+
+---
+
 ## The story
 
 I was excited when I got into Loyola. The offer came with 50% financial aid. It sounded like a chance I could finally take. Then I worked out what was left to pay: **more than ₹20 lakh a year**.
