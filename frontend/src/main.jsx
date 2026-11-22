@@ -172,17 +172,6 @@ function Nav({ onHome, onExplore, onNavigateSection, onOpenOperator, active = 'h
             >
               Why Trust Us
             </button>
-            {onOpenOperator && (
-              <button
-                type="button"
-                className="nav-link-item"
-                onClick={onOpenOperator}
-                title="Protected Team Operator Demo"
-              >
-                <Lock size={12} style={{ marginRight: 4, verticalAlign: 'middle' }} />
-                Operator Demo
-              </button>
-            )}
           </nav>
 
           <div className="nav-actions">
@@ -241,14 +230,6 @@ function Nav({ onHome, onExplore, onNavigateSection, onOpenOperator, active = 'h
         >
           Why Trust Us
         </button>
-        {onOpenOperator && (
-          <button
-            className="btn btn-ghost btn-md"
-            onClick={() => { setMenu(false); onOpenOperator(); }}
-          >
-            <Lock size={15} style={{ marginRight: 6 }} /> Operator Demo
-          </button>
-        )}
       </div>
     </>
   );
@@ -1001,7 +982,6 @@ function EmailComposerModal({
   schoolName,
   questions = [],
   sources = [],
-  onHandoffToOperator,
 }) {
   const { addToast } = useToast();
   const [selectedIndices, setSelectedIndices] = useState(() => new Set(questions.map((_, i) => i)));
@@ -1060,66 +1040,57 @@ function EmailComposerModal({
     addToast('Inquiry email copied to clipboard');
   };
 
-  const handleOperatorHandoff = () => {
-    if (onHandoffToOperator) {
-      onHandoffToOperator({
-        subject,
-        text: emailText,
-        sources: sources.map(s => s.source_url || '').filter(Boolean),
-        schoolName,
-      });
-    }
-  };
+  const mailtoUrl = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(emailText)}`;
 
   return (
-    <div className="modal-backdrop" onClick={onClose} role="dialog" aria-modal="true">
-      <div className="modal-window" style={{ maxWidth: 680, maxHeight: '90vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
-        <div className="modal-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <Mail size={20} color="var(--brand-primary)" />
-            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>Prepare Inquiry Email</h3>
+    <div className="modal-overlay" onClick={onClose} role="dialog" aria-modal="true">
+      <div className="modal-dialog composer-modal-dialog" onClick={e => e.stopPropagation()}>
+        <div className="composer-modal-header">
+          <div className="composer-modal-title-group">
+            <div className="composer-modal-icon">
+              <Mail size={18} />
+            </div>
+            <div>
+              <div className="composer-title-row">
+                <h3>Prepare Inquiry Email</h3>
+                <span className="composer-tool-tag">Powered by Agentboxd</span>
+              </div>
+              <p className="composer-modal-subtitle">
+                Draft a clear, polite inquiry to {schoolName} referencing official policy evidence.
+              </p>
+            </div>
           </div>
-          <button className="modal-close-btn" onClick={onClose} aria-label="Close modal">
+          <button className="composer-close-btn" onClick={onClose} aria-label="Close modal">
             <X size={18} />
           </button>
         </div>
 
-        <div className="modal-body">
-          <div className="inquiry-notice-banner">
-            <Info size={16} style={{ flexShrink: 0, marginTop: 2 }} />
+        <div className="composer-modal-body">
+          <div className="composer-notice-banner">
+            <ShieldCheck size={18} className="composer-notice-icon" />
             <div>
-              <strong>Student Inquiry Preparation:</strong> This draft is prepared from official source-linked findings to help you ask clear questions. It does not calculate final cost or guarantee eligibility. Never include sensitive documents, income figures, or passwords.
+              <strong>Privacy & Safety Guardrails:</strong> This draft is prepared from official source-linked findings to help you ask clear questions. Never disclose passwords, tax returns, bank statements, or national identity documents in initial inquiries.
             </div>
           </div>
 
-          <div style={{ marginTop: 16 }}>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>
-              Subject Line
-            </label>
+          <div className="composer-form-group">
+            <label className="composer-label">Email Subject</label>
             <input
               type="text"
+              className="composer-input"
               value={subject}
               onChange={e => setSubject(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                borderRadius: 8,
-                border: '1px solid var(--border-color)',
-                fontSize: 14,
-                fontFamily: 'inherit',
-                backgroundColor: 'var(--bg-input)'
-              }}
             />
           </div>
 
-          <div style={{ marginTop: 16 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-              <label style={{ fontSize: 13, fontWeight: 600 }}>
-                Select Questions to Include ({selectedIndices.size} of {questions.length})
+          <div className="composer-form-group">
+            <div className="composer-questions-header">
+              <label className="composer-label">
+                Include Questions ({selectedIndices.size} of {questions.length})
               </label>
               <button
                 type="button"
-                style={{ background: 'none', border: 'none', color: 'var(--brand-primary)', fontSize: 12, cursor: 'pointer', padding: 0 }}
+                className="composer-toggle-all-btn"
                 onClick={() => {
                   if (selectedIndices.size === questions.length) setSelectedIndices(new Set());
                   else setSelectedIndices(new Set(questions.map((_, i) => i)));
@@ -1128,14 +1099,14 @@ function EmailComposerModal({
                 {selectedIndices.size === questions.length ? 'Deselect all' : 'Select all'}
               </button>
             </div>
-            <div style={{ maxHeight: 160, overflowY: 'auto', border: '1px solid var(--border-color)', borderRadius: 8, padding: 8, background: 'var(--bg-card)' }}>
+
+            <div className="composer-questions-list">
               {questions.map((q, idx) => (
-                <label key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '6px 4px', cursor: 'pointer', fontSize: 13, borderBottom: idx < questions.length - 1 ? '1px solid var(--border-color-subtle)' : 'none' }}>
+                <label key={idx} className={`composer-question-item ${selectedIndices.has(idx) ? 'selected' : ''}`}>
                   <input
                     type="checkbox"
                     checked={selectedIndices.has(idx)}
                     onChange={() => toggleQuestion(idx)}
-                    style={{ marginTop: 3 }}
                   />
                   <span>{q.question}</span>
                 </label>
@@ -1143,50 +1114,52 @@ function EmailComposerModal({
             </div>
           </div>
 
-          <div style={{ marginTop: 16 }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, cursor: 'pointer' }}>
+          <div className="composer-sources-toggle">
+            <label className="composer-checkbox-label">
               <input
                 type="checkbox"
                 checked={includeSources}
                 onChange={e => setIncludeSources(e.target.checked)}
               />
-              <span>Include verified official source links in draft ({sources.length} available)</span>
+              <span>Attach verified official university source links ({sources.length} available)</span>
             </label>
           </div>
 
-          <div style={{ marginTop: 16 }}>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>
-              Editable Email Preview
-            </label>
-            <textarea
-              className="email-composer-textarea"
-              rows={9}
-              value={emailText}
-              readOnly
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                borderRadius: 8,
-                border: '1px solid var(--border-color)',
-                fontSize: 13,
-                fontFamily: 'monospace',
-                backgroundColor: 'var(--bg-secondary)',
-                resize: 'vertical'
-              }}
-            />
+          <div className="composer-form-group">
+            <div className="composer-preview-header">
+              <label className="composer-label">Generated Inquiry Draft</label>
+              <span className="composer-preview-hint">Editable in your email client</span>
+            </div>
+            <div className="composer-email-card">
+              <div className="composer-email-meta">
+                <span className="composer-meta-to">To: {schoolName} Financial Aid Office</span>
+              </div>
+              <textarea
+                className="composer-textarea"
+                rows={9}
+                value={emailText}
+                readOnly
+              />
+            </div>
           </div>
         </div>
 
-        <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginTop: 20 }}>
-          <button className="btn btn-secondary btn-sm" onClick={onClose}>
+        <div className="composer-modal-footer">
+          <button className="btn btn-secondary btn-md" onClick={onClose}>
             Close
           </button>
-          <div style={{ display: 'flex', gap: 10 }}>
-            <button className="btn btn-secondary btn-sm" onClick={handleCopy}>
-              <Copy size={14} /> Copy to Clipboard
-            </button>
-            <button className="btn btn-primary btn-sm" onClick={handleOperatorHandoff}>
-              <Lock size={14} /> Operator Demo (Agentboxd)
+          <div className="composer-footer-actions">
+            <a
+              href={mailtoUrl}
+              className="btn btn-secondary btn-md"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => addToast('Opening in your mail app...')}
+            >
+              <ExternalLink size={15} /> Open in Mail App
+            </a>
+            <button className="btn btn-primary btn-md" onClick={handleCopy}>
+              <Copy size={15} /> Copy Email to Clipboard
             </button>
           </div>
         </div>
@@ -1639,6 +1612,20 @@ function Dashboard({ onBack, onNewSearch, selectedSchool, onNavigateSection, onO
   const schoolDomain = researchData?.school?.domain || school.domain || '';
   const schoolName = researchData?.school?.name || school.name || '';
 
+  const simplifiedMessage = useMemo(() => {
+    const msg = researchMessage || '';
+    if (!msg || msg.toLowerCase().includes('retrieved') || msg.toLowerCase().includes('verified host') || msg.toLowerCase().includes('curated') || msg.toLowerCase().includes('official university source')) {
+      return 'Official university source';
+    }
+    if (msg.toLowerCase().includes('cached')) {
+      return 'Official university source (cached)';
+    }
+    if (msg.toLowerCase().includes('unavailable') || msg.toLowerCase().includes('cannot research') || msg.toLowerCase().includes('no official')) {
+      return msg;
+    }
+    return 'Official university source';
+  }, [researchMessage]);
+
   const reviewedEvidenceCount = evidence.filter(e => e.review_status === 'team_reviewed').length;
   const unreviewedEvidenceCount = evidence.length - reviewedEvidenceCount;
 
@@ -1869,7 +1856,7 @@ function Dashboard({ onBack, onNewSearch, selectedSchool, onNavigateSection, onO
             <StatusBadge status={researchStatus} />
 
             <div className="research-meta-text">
-              <strong>{researchMessage || 'Policy records loaded'}</strong>
+              <strong>{simplifiedMessage}</strong>
               <small>{lastUpdated}</small>
             </div>
 
@@ -2049,9 +2036,6 @@ function Dashboard({ onBack, onNewSearch, selectedSchool, onNavigateSection, onO
                     </button>
                     <button className="btn btn-secondary btn-sm" onClick={handleExportChecklist}>
                       <Download size={14} /> Export checklist
-                    </button>
-                    <button className="btn btn-secondary btn-sm" onClick={handleExportAgentboxdHandoff}>
-                      <Download size={14} /> Export for Agentboxd demo
                     </button>
                   </div>
                 </div>
@@ -2276,10 +2260,6 @@ function Dashboard({ onBack, onNewSearch, selectedSchool, onNavigateSection, onO
         schoolName={schoolName}
         questions={dynamicQuestions}
         sources={evidence}
-        onHandoffToOperator={(draftData) => {
-          setEmailComposerOpen(false);
-          if (onOpenOperator) onOpenOperator(draftData);
-        }}
       />
 
       <Footer onExplore={onNewSearch} onNavigateSection={onNavigateSection} />

@@ -268,7 +268,7 @@ def conduct_research(
                 "domain": trusted_domain,
             },
             "status": "fresh",
-            "message": "Loaded verified curated policy records for institution",
+            "message": "Official university source",
             "cards": [curated_card],
         }
 
@@ -354,6 +354,6 @@ def conduct_research(
             "domain": trusted_domain,
         },
         "status": "fresh",
-        "message": "Retrieved live source-linked evidence from verified university host",
+        "message": "Official university source",
         "cards": [card],
     }

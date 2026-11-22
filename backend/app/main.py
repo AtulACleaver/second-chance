@@ -124,7 +124,7 @@ def post_research(req: ResearchRequest) -> Dict[str, Any]:
                 "domain": domain,
             },
             "status": "cached",
-            "message": "Loaded cached source records",
+            "message": "Official university source (cached)",
             "cards": cards,
         }
 
