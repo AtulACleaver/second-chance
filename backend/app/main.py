@@ -23,10 +23,12 @@ if env_file.exists():
 
 from .cache import get_cached_record, set_cached_record
 from .directory import resolve_school_identity, search_schools
+from .operator import router as operator_router
 from .policies import attach_curated_actions, get_curated_card
 from .research import conduct_research
 
 app = FastAPI(title="Second Chance", version="0.2.0")
+app.include_router(operator_router)
 
 # configure cors origins from environment
 cors_origins_env = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173")
