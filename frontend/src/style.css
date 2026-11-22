@@ -3068,6 +3068,27 @@ div[id] {
   justify-content: space-between;
 }
 
+.composer-preview-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.composer-reset-btn {
+  background: none;
+  border: none;
+  color: var(--forest-600);
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.composer-reset-btn:hover {
+  color: var(--forest-800);
+}
+
 .composer-preview-hint {
   font-size: 11.5px;
   color: var(--text-tertiary);

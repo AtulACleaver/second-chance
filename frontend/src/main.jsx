@@ -1058,6 +1058,69 @@ function resolveUniversityInquiryEmail(schoolName, domain, fallbackEmail) {
   return 'financialaid@university.edu';
 }
 
+function convertActionToInquiryQuestion(text, schoolName) {
+  if (!text) return '';
+  const trimmed = text.trim();
+
+  // Known curated patterns
+  if (/Check Princeton's aid application and its deadline/i.test(trimmed)) {
+    return 'Could you please confirm the required financial aid application forms and priority submission deadlines for international undergraduate applicants?';
+  }
+  if (/submit the CSS Profile when applying for admission/i.test(trimmed)) {
+    return 'Could you please clarify whether international applicants must submit the CSS Profile at the time of admission to be eligible for grant aid, and whether aid can be requested in future years if not requested initially?';
+  }
+  if (/Decide whether you may need Cornell grant.*check the CSS rule/i.test(trimmed) || /If you may need Cornell grant.*check the CSS requirement/i.test(trimmed)) {
+    return 'Could you clarify your policy on whether international students admitted without financial aid are eligible to apply for institutional grant assistance in subsequent academic years?';
+  }
+  if (/Confirm whether you are a first-year or transfer/i.test(trimmed)) {
+    return 'Could you clarify whether international first-year and transfer applicants follow the same financial aid eligibility guidelines and deadlines?';
+  }
+  if (/priority date for your application round/i.test(trimmed) || /priority date for your own entry year/i.test(trimmed)) {
+    return 'Could you confirm the priority deadline for submitting international financial aid materials for my application cycle?';
+  }
+  if (/Action needed: if your application is not yet submitted/i.test(trimmed)) {
+    return 'Could you advise on how an international applicant can verify or update their intent to apply for institutional financial aid if their admissions application has already been submitted?';
+  }
+  if (/check whether you indicated aid on your admission application/i.test(trimmed)) {
+    return 'Could you help me verify whether my admissions file indicates that I am applying for need-based financial aid?';
+  }
+  if (/Confirm your actual application and check the aid forms/i.test(trimmed)) {
+    return 'Could you verify which specific forms and documentation are required to complete an international financial aid file?';
+  }
+  if (/check the requirement to request it when applying for admission/i.test(trimmed)) {
+    return 'Could you confirm whether international applicants must apply for aid during the initial application cycle to remain eligible for institutional funding throughout their undergraduate degree?';
+  }
+  if (/check the free ISFAA option.*waiver after admission/i.test(trimmed)) {
+    return 'Could you clarify the process for submitting the free ISFAA form during application and how CSS Profile fee waivers are provided for admitted international students?';
+  }
+  if (/Review the exact quoted policy passages/i.test(trimmed)) {
+    return 'Could you please confirm the current undergraduate need-based financial aid opportunities and eligibility requirements for international applicants?';
+  }
+  if (/Contact international undergraduate admissions to verify requirements/i.test(trimmed)) {
+    return 'Could you clarify the specific application deadlines and required documentation for prospective international undergraduate applicants for the upcoming cycle?';
+  }
+
+  // General heuristic transformation if action starts with imperative verbs
+  let clean = trimmed;
+  if (/^Check\s+/i.test(clean)) {
+    clean = clean.replace(/^Check\s+/i, 'Could you please clarify ');
+  } else if (/^Confirm\s+/i.test(clean)) {
+    clean = clean.replace(/^Confirm\s+/i, 'Could you please confirm ');
+  } else if (/^Find\s+/i.test(clean)) {
+    clean = clean.replace(/^Find\s+/i, 'Could you provide information regarding ');
+  } else if (/^Contact\s+/i.test(clean)) {
+    clean = clean.replace(/^Contact\s+[^to]+to\s+/i, 'Could you please ');
+  } else if (/^Review\s+/i.test(clean)) {
+    clean = clean.replace(/^Review\s+/i, 'Could you please clarify ');
+  }
+
+  clean = clean.replace(/\.+$/, '');
+  if (!clean.endsWith('?')) {
+    clean += '?';
+  }
+  return clean;
+}
+
 // ============================================================================
 // STUDENT INQUIRY EMAIL COMPOSER MODAL
 // ============================================================================
@@ -1075,14 +1138,8 @@ function EmailComposerModal({
   const [subject, setSubject] = useState(`Inquiry: Undergraduate Financial Aid Policy for International Students (${schoolName})`);
   const [recipientEmail, setRecipientEmail] = useState(() => resolveUniversityInquiryEmail(schoolName, schoolDomain, inquiryEmail));
   const [includeSources, setIncludeSources] = useState(true);
-
-  useEffect(() => {
-    if (questions && questions.length > 0) {
-      setSelectedIndices(new Set(questions.map((_, i) => i)));
-    }
-    setSubject(`Inquiry: Undergraduate Financial Aid Policy for International Students (${schoolName})`);
-    setRecipientEmail(resolveUniversityInquiryEmail(schoolName, schoolDomain, inquiryEmail));
-  }, [schoolName, schoolDomain, inquiryEmail, questions]);
+  const [customBody, setCustomBody] = useState('');
+  const [isCustomEdited, setIsCustomEdited] = useState(false);
 
   const toggleQuestion = (index) => {
     setSelectedIndices(prev => {
@@ -1097,30 +1154,55 @@ function EmailComposerModal({
     return questions.filter((_, idx) => selectedIndices.has(idx));
   }, [questions, selectedIndices]);
 
-  const emailText = useMemo(() => {
+  const generatedBody = useMemo(() => {
     let body = `Dear ${schoolName} Financial Aid Office,\n\n`;
     body += `I am an international prospective undergraduate applicant researching financial-aid policies at ${schoolName}. `;
-    body += `Based on official portal information, I would appreciate clarification on the following questions:\n\n`;
+    body += `Based on official portal information, I would appreciate clarification on the following:\n\n`;
 
     if (selectedQuestions.length === 0) {
-      body += `[No specific questions selected yet]\n\n`;
+      body += `[Please select one or more questions above]\n\n`;
     } else {
       selectedQuestions.forEach((q, i) => {
-        body += `${i + 1}. ${q.question}\n   Context: ${q.why || ''}\n\n`;
+        const questionText = convertActionToInquiryQuestion(q.question, schoolName);
+        body += `${i + 1}. ${questionText}\n\n`;
       });
     }
 
     if (includeSources && sources.length > 0) {
-      body += `Referenced official university sources:\n`;
-      sources.slice(0, 3).forEach((s) => {
-        body += `- ${s.source_url || 'Official University Portal'}\n`;
+      const uniqueUrls = [];
+      sources.forEach((s) => {
+        const url = s.source_url || '';
+        if (url && !uniqueUrls.includes(url)) {
+          uniqueUrls.push(url);
+        }
       });
-      body += `\n`;
+      if (uniqueUrls.length > 0) {
+        body += `Official portal pages referenced:\n`;
+        uniqueUrls.slice(0, 3).forEach((url) => {
+          body += `- ${url}\n`;
+        });
+        body += `\n`;
+      }
     }
 
-    body += `Thank you for your time and guidance.\n\nSincerely,\nProspective International Applicant`;
+    body += `Thank you for your time and guidance.\n\nSincerely,\n[Your Name]\nProspective International Applicant`;
     return body;
   }, [schoolName, selectedQuestions, includeSources, sources]);
+
+  useEffect(() => {
+    if (!isCustomEdited) {
+      setCustomBody(generatedBody);
+    }
+  }, [generatedBody, isCustomEdited]);
+
+  useEffect(() => {
+    if (questions && questions.length > 0) {
+      setSelectedIndices(new Set(questions.map((_, i) => i)));
+    }
+    setSubject(`Inquiry: Undergraduate Financial Aid Policy for International Students (${schoolName})`);
+    setRecipientEmail(resolveUniversityInquiryEmail(schoolName, schoolDomain, inquiryEmail));
+    setIsCustomEdited(false);
+  }, [schoolName, schoolDomain, inquiryEmail, questions]);
 
   useEffect(() => {
     if (isOpen) {
@@ -1135,12 +1217,12 @@ function EmailComposerModal({
   if (!isOpen) return null;
 
   const handleCopy = () => {
-    const fullDraft = `To: ${recipientEmail}\nSubject: ${subject}\n\n${emailText}`;
+    const fullDraft = `To: ${recipientEmail}\nSubject: ${subject}\n\n${customBody}`;
     navigator.clipboard.writeText(fullDraft);
     addToast('Inquiry email copied to clipboard');
   };
 
-  const mailtoUrl = `mailto:${encodeURIComponent(recipientEmail)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(emailText)}`;
+  const mailtoUrl = `mailto:${encodeURIComponent(recipientEmail)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(customBody)}`;
 
   return createPortal(
     <div className="modal-overlay" onClick={onClose} role="dialog" aria-modal="true">
@@ -1214,6 +1296,7 @@ function EmailComposerModal({
                 type="button"
                 className="composer-toggle-all-btn"
                 onClick={() => {
+                  setIsCustomEdited(false);
                   if (selectedIndices.size === questions.length) setSelectedIndices(new Set());
                   else setSelectedIndices(new Set(questions.map((_, i) => i)));
                 }}
@@ -1228,9 +1311,12 @@ function EmailComposerModal({
                   <input
                     type="checkbox"
                     checked={selectedIndices.has(idx)}
-                    onChange={() => toggleQuestion(idx)}
+                    onChange={() => {
+                      setIsCustomEdited(false);
+                      toggleQuestion(idx);
+                    }}
                   />
-                  <span>{q.question}</span>
+                  <span>{convertActionToInquiryQuestion(q.question, schoolName)}</span>
                 </label>
               ))}
             </div>
@@ -1241,7 +1327,10 @@ function EmailComposerModal({
               <input
                 type="checkbox"
                 checked={includeSources}
-                onChange={e => setIncludeSources(e.target.checked)}
+                onChange={e => {
+                  setIsCustomEdited(false);
+                  setIncludeSources(e.target.checked);
+                }}
               />
               <span>Attach verified official university source links ({sources.length} available)</span>
             </label>
@@ -1250,7 +1339,21 @@ function EmailComposerModal({
           <div className="composer-form-group">
             <div className="composer-preview-header">
               <label className="composer-label">Generated Inquiry Draft</label>
-              <span className="composer-preview-hint">Editable in your email client</span>
+              <div className="composer-preview-header-actions">
+                {isCustomEdited && (
+                  <button
+                    type="button"
+                    className="composer-reset-btn"
+                    onClick={() => {
+                      setIsCustomEdited(false);
+                      setCustomBody(generatedBody);
+                    }}
+                  >
+                    Reset to template
+                  </button>
+                )}
+                <span className="composer-preview-hint">Editable directly in box</span>
+              </div>
             </div>
             <div className="composer-email-card">
               <div className="composer-email-meta">
@@ -1258,9 +1361,12 @@ function EmailComposerModal({
               </div>
               <textarea
                 className="composer-textarea"
-                rows={9}
-                value={emailText}
-                readOnly
+                rows={10}
+                value={customBody}
+                onChange={e => {
+                  setIsCustomEdited(true);
+                  setCustomBody(e.target.value);
+                }}
               />
             </div>
           </div>
