@@ -12,8 +12,13 @@ DEFAULT_TTL_SECONDS = 86400
 
 
 def get_db_path() -> str:
-    # get configured sqlite cache database path
-    return os.getenv("CACHE_PATH", DEFAULT_CACHE_PATH).strip() or DEFAULT_CACHE_PATH
+    # get configured sqlite cache database path with fallback for vercel serverless
+    configured = os.getenv("CACHE_PATH", "").strip()
+    if configured:
+        return configured
+    if os.getenv("VERCEL"):
+        return "/tmp/second_chance.sqlite3"
+    return DEFAULT_CACHE_PATH
 
 
 def init_cache_db(db_path: Optional[str] = None) -> None:
