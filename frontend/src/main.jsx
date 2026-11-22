@@ -1030,6 +1030,28 @@ function Dashboard({ onBack, onNewSearch, selectedSchool, onNavigateSection }) {
     addToast('Checklist exported successfully');
   };
 
+  // Export only the student's unanswered questions and source links, not their profile.
+  // Agentboxd is an operator-assisted demo; this button does not contact its API.
+  const handleExportAgentboxdHandoff = () => {
+    const questions = dynamicQuestions.filter(q => !askedQuestions.has(q.id)).map(q => q.question);
+    if (!questions.length) {
+      addToast('Uncheck at least one question to prepare a draft', 'info');
+      return;
+    }
+    const sources = [...new Set(evidence.map(item => item.source_url).filter(url => {
+      try { return new URL(url).protocol === 'https:'; } catch { return false; }
+    }))];
+    const handoff = { version: 1, school: schoolName, questions, sources };
+    const blob = new Blob([JSON.stringify(handoff, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'second-chance-agentboxd-handoff.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    addToast('Question handoff exported. No email was sent.');
+  };
+
   const handleRefresh = async () => {
     setRefreshing(true);
     await doResearch(true);
@@ -1283,7 +1305,7 @@ function Dashboard({ onBack, onNewSearch, selectedSchool, onNavigateSection }) {
                   <div className="questions-heading-col">
                     <h2>Next Questions to Ask</h2>
                     <p>
-                      Curated questions to verify directly with {schoolName}'s financial-aid office.
+                      Curated questions to verify directly with {schoolName}'s financial-aid office. The Agentboxd export is an operator-assisted demo, not an automatic email.
                     </p>
                   </div>
 
@@ -1312,6 +1334,9 @@ function Dashboard({ onBack, onNewSearch, selectedSchool, onNavigateSection }) {
                     </button>
                     <button className="btn btn-primary btn-sm" onClick={handleExportChecklist}>
                       <Download size={14} /> Export checklist
+                    </button>
+                    <button className="btn btn-secondary btn-sm" onClick={handleExportAgentboxdHandoff}>
+                      <Download size={14} /> Export for Agentboxd demo
                     </button>
                   </div>
                 </div>
