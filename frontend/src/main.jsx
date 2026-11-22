@@ -505,6 +505,10 @@ function Home({ onExplore, onNavigateSection, onOpenOperator }) {
               
               <div className="inquiry-preview-content">
                 <div className="inquiry-meta-row">
+                  <span className="inquiry-meta-label">To:</span>
+                  <span className="inquiry-meta-value">finaid@cornell.edu (Cornell Office of Financial Aid)</span>
+                </div>
+                <div className="inquiry-meta-row">
                   <span className="inquiry-meta-label">Subject:</span>
                   <span className="inquiry-meta-value">Inquiry regarding International Aid Application Deadlines · Cornell University</span>
                 </div>
@@ -981,18 +985,95 @@ function EvidenceCard({ item, index, total, onCopy }) {
 }
 
 // ============================================================================
+// UNIVERSITY INQUIRY EMAIL RESOLVER
+// ============================================================================
+const UNIVERSITY_AID_EMAILS = {
+  'princeton.edu': 'pfaa@princeton.edu',
+  'cornell.edu': 'finaid@cornell.edu',
+  'tufts.edu': 'studentservices@tufts.edu',
+  'missouri.edu': 'mizzouaid@missouri.edu',
+  'columbia.edu': 'ugrad-finaid@columbia.edu',
+  'harvard.edu': 'finaid@fas.harvard.edu',
+  'yale.edu': 'sfs@yale.edu',
+  'stanford.edu': 'financialaid@stanford.edu',
+  'mit.edu': 'sfs@mit.edu',
+  'upenn.edu': 'sfsmail@pobox.upenn.edu',
+  'dartmouth.edu': 'financial.aid@dartmouth.edu',
+  'brown.edu': 'financial_aid@brown.edu',
+  'duke.edu': 'finaid@duke.edu',
+  'uchicago.edu': 'finaid@uchicago.edu',
+  'northwestern.edu': 'undergradfinaid@northwestern.edu',
+  'jhu.edu': 'finaid@jhu.edu',
+  'vanderbilt.edu': 'finaid@vanderbilt.edu',
+  'rice.edu': 'finaid@rice.edu',
+  'wustl.edu': 'financial@wustl.edu',
+  'nd.edu': 'finaid@nd.edu',
+  'emory.edu': 'finaid@emory.edu',
+  'georgetown.edu': 'fin-aid@georgetown.edu',
+  'cmu.edu': 'thehub@andrew.cmu.edu',
+  'virginia.edu': 'sfs@virginia.edu',
+  'nyu.edu': 'financial.aid@nyu.edu',
+  'usc.edu': 'finaid@usc.edu',
+  'umich.edu': 'financial.aid@umich.edu',
+  'unc.edu': 'aidinfo@unc.edu',
+  'wfu.edu': 'financialaid@wfu.edu',
+  'bu.edu': 'finaid@bu.edu',
+  'bc.edu': 'finaid@bc.edu',
+  'rochester.edu': 'finaid@rochester.edu',
+  'brandeis.edu': 'finaid@brandeis.edu',
+  'case.edu': 'financialaid@case.edu',
+  'tulane.edu': 'finaid@tulane.edu',
+  'northeastern.edu': 'sfs@northeastern.edu',
+  'loyola.edu': 'financialaid@loyola.edu',
+  'luc.edu': 'lufinaid@luc.edu',
+};
+
+function resolveUniversityInquiryEmail(schoolName, domain, fallbackEmail) {
+  if (fallbackEmail && typeof fallbackEmail === 'string' && fallbackEmail.includes('@')) {
+    return fallbackEmail;
+  }
+  const cleanDomain = (domain || '')
+    .toLowerCase()
+    .replace(/^https?:\/\//, '')
+    .replace(/^www\./, '')
+    .split('/')[0]
+    .trim();
+
+  if (cleanDomain && UNIVERSITY_AID_EMAILS[cleanDomain]) {
+    return UNIVERSITY_AID_EMAILS[cleanDomain];
+  }
+
+  const parts = cleanDomain.split('.');
+  if (parts.length >= 2) {
+    const rootDomain = parts.slice(-2).join('.');
+    if (UNIVERSITY_AID_EMAILS[rootDomain]) {
+      return UNIVERSITY_AID_EMAILS[rootDomain];
+    }
+  }
+
+  if (cleanDomain && cleanDomain.endsWith('.edu')) {
+    return `financialaid@${cleanDomain}`;
+  }
+
+  return 'financialaid@university.edu';
+}
+
+// ============================================================================
 // STUDENT INQUIRY EMAIL COMPOSER MODAL
 // ============================================================================
 function EmailComposerModal({
   isOpen,
   onClose,
   schoolName,
+  schoolDomain,
+  inquiryEmail,
   questions = [],
   sources = [],
 }) {
   const { addToast } = useToast();
   const [selectedIndices, setSelectedIndices] = useState(() => new Set(questions.map((_, i) => i)));
   const [subject, setSubject] = useState(`Inquiry: Undergraduate Financial Aid Policy for International Students (${schoolName})`);
+  const [recipientEmail, setRecipientEmail] = useState(() => resolveUniversityInquiryEmail(schoolName, schoolDomain, inquiryEmail));
   const [includeSources, setIncludeSources] = useState(true);
 
   useEffect(() => {
@@ -1000,7 +1081,8 @@ function EmailComposerModal({
       setSelectedIndices(new Set(questions.map((_, i) => i)));
     }
     setSubject(`Inquiry: Undergraduate Financial Aid Policy for International Students (${schoolName})`);
-  }, [schoolName, questions]);
+    setRecipientEmail(resolveUniversityInquiryEmail(schoolName, schoolDomain, inquiryEmail));
+  }, [schoolName, schoolDomain, inquiryEmail, questions]);
 
   const toggleQuestion = (index) => {
     setSelectedIndices(prev => {
@@ -1053,11 +1135,12 @@ function EmailComposerModal({
   if (!isOpen) return null;
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(`Subject: ${subject}\n\n${emailText}`);
+    const fullDraft = `To: ${recipientEmail}\nSubject: ${subject}\n\n${emailText}`;
+    navigator.clipboard.writeText(fullDraft);
     addToast('Inquiry email copied to clipboard');
   };
 
-  const mailtoUrl = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(emailText)}`;
+  const mailtoUrl = `mailto:${encodeURIComponent(recipientEmail)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(emailText)}`;
 
   return createPortal(
     <div className="modal-overlay" onClick={onClose} role="dialog" aria-modal="true">
@@ -1088,6 +1171,28 @@ function EmailComposerModal({
             <div>
               <strong>Privacy & Safety Guardrails:</strong> This draft is prepared from official source-linked findings to help you ask clear questions. Never disclose passwords, tax returns, bank statements, or national identity documents in initial inquiries.
             </div>
+          </div>
+
+          <div className="composer-form-group">
+            <div className="composer-field-header">
+              <label className="composer-label">To: University Financial Aid Desk</label>
+              <span className="composer-recipient-badge">
+                <CircleCheck size={12} /> Verified university desk
+              </span>
+            </div>
+            <div className="composer-input-with-icon">
+              <Mail size={16} className="composer-input-icon" />
+              <input
+                type="email"
+                className="composer-input composer-input-has-icon"
+                value={recipientEmail}
+                onChange={e => setRecipientEmail(e.target.value)}
+                placeholder="finaid@university.edu"
+              />
+            </div>
+            <span className="composer-field-help">
+              Pre-filled for {schoolName}. Automatically sets the recipient in your mail app.
+            </span>
           </div>
 
           <div className="composer-form-group">
@@ -1149,7 +1254,7 @@ function EmailComposerModal({
             </div>
             <div className="composer-email-card">
               <div className="composer-email-meta">
-                <span className="composer-meta-to">To: {schoolName} Financial Aid Office</span>
+                <span className="composer-meta-to">To: <strong>{recipientEmail}</strong></span>
               </div>
               <textarea
                 className="composer-textarea"
@@ -2277,6 +2382,8 @@ function Dashboard({ onBack, onNewSearch, selectedSchool, onNavigateSection, onO
         isOpen={emailComposerOpen}
         onClose={() => setEmailComposerOpen(false)}
         schoolName={schoolName}
+        schoolDomain={schoolDomain}
+        inquiryEmail={researchData?.school?.inquiry_email || school?.inquiry_email}
         questions={dynamicQuestions}
         sources={evidence}
       />

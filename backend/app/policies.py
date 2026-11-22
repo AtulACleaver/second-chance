@@ -16,6 +16,7 @@ CURATED_SCHOOLS: Dict[str, Dict[str, Any]] = {
         "location": "Princeton, NJ",
         "domain": "princeton.edu",
         "domain_status": "curated",
+        "inquiry_email": "pfaa@princeton.edu",
         "tagline": "Aid need does not disadvantage admission.",
         "admissions": "Need-blind for financial aid applicants.",
         "aid": "For admitted international students, demonstrated need is met. Qualifying aid is a grant, not a loan.",
@@ -49,6 +50,7 @@ CURATED_SCHOOLS: Dict[str, Dict[str, Any]] = {
         "location": "Ithaca, NY",
         "domain": "cornell.edu",
         "domain_status": "curated",
+        "inquiry_email": "finaid@cornell.edu",
         "tagline": "Your need can be considered in admission.",
         "admissions": "Need-aware for international applicants; financial need is one factor among many.",
         "aid": "Admitted international undergraduates' demonstrated need is met with grants and an annual work-study award, plus reasonable loans depending on total family income.",
@@ -82,6 +84,7 @@ CURATED_SCHOOLS: Dict[str, Dict[str, Any]] = {
         "location": "Medford, MA",
         "domain": "tufts.edu",
         "domain_status": "curated",
+        "inquiry_email": "studentservices@tufts.edu",
         "tagline": "Ask for aid when you apply.",
         "admissions": "Check the current admissions policy for your circumstances; this prototype does not assess admission.",
         "aid": "Tufts says it meets admitted students' demonstrated financial need regardless of citizenship. Need depends on its assessment of family resources.",
@@ -202,6 +205,7 @@ def get_curated_evidence(school_id: str) -> Optional[Dict[str, Any]]:
         "id": policy["id"],
         "short_name": policy["short_name"],
         "tagline": policy["tagline"],
+        "inquiry_email": policy.get("inquiry_email"),
         "evidence": policy["evidence"],
         "assessment": "Not evaluated",
     }
@@ -251,6 +255,7 @@ def get_curated_candidates() -> List[Dict[str, Any]]:
             "location": s["location"],
             "domain": s["domain"],
             "domain_status": s["domain_status"],
+            "inquiry_email": s.get("inquiry_email"),
         }
         for s in CURATED_SCHOOLS.values()
     ]
