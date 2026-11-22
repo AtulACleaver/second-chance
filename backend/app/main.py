@@ -122,7 +122,7 @@ def post_research(req: ResearchRequest) -> Dict[str, Any]:
                 "domain": domain,
             },
             "status": "cached",
-            "message": "Loaded cached source records",
+            "message": "Cached policy records",
             "cards": cards,
         }
 
@@ -158,7 +158,7 @@ def post_research(req: ResearchRequest) -> Dict[str, Any]:
                 "domain": domain,
             },
             "status": "stale",
-            "message": "Live refresh unavailable; retaining previous verified evidence",
+            "message": "Live refresh unavailable; retaining previous records",
             "cards": cards,
         }
 

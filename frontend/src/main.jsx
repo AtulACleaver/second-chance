@@ -982,6 +982,16 @@ function Dashboard({ onBack, onNewSearch, selectedSchool, onNavigateSection }) {
     return 'Recently checked';
   }, [evidence]);
 
+  const displayStatusTitle = useMemo(() => {
+    if (!researchMessage || researchMessage.length > 30) {
+      if (researchStatus === 'fresh') return 'Official policy records';
+      if (researchStatus === 'cached') return 'Cached policy records';
+      if (researchStatus === 'stale') return 'Previous policy records';
+      return 'Official policy records';
+    }
+    return researchMessage;
+  }, [researchMessage, researchStatus]);
+
   const toggleAsked = (id) => {
     setAskedQuestions(prev => {
       const next = new Set(prev);
@@ -1157,7 +1167,7 @@ function Dashboard({ onBack, onNewSearch, selectedSchool, onNavigateSection }) {
             <StatusBadge status={researchStatus} />
 
             <div className="research-meta-text">
-              <strong>{researchMessage || 'Policy records loaded'}</strong>
+              <strong>{displayStatusTitle}</strong>
               <small>{lastUpdated}</small>
             </div>
 
