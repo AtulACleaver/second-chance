@@ -28,23 +28,34 @@ def init_cache_db(db_path: Optional[str] = None) -> None:
         conn = sqlite3.connect(path)
         try:
             with conn:
-                conn.execute(
-                    """
-                    CREATE TABLE IF NOT EXISTS evidence_cache (
-                        school_id TEXT PRIMARY KEY,
-                        school_name TEXT NOT NULL,
-                        domain TEXT,
-                        cards_json TEXT NOT NULL,
-                        retrieved_at TEXT NOT NULL,
-                        status TEXT NOT NULL
-                    )
-                    """
+                create_table_sql = (
+                    "CREATE TABLE IF NOT EXISTS evidence_cache ("
+                    "school_id TEXT PRIMARY KEY, "
+                    "school_name TEXT NOT NULL, "
+                    "domain TEXT, "
+                    "cards_json TEXT NOT NULL, "
+                    "retrieved_at TEXT NOT NULL, "
+                    "status TEXT NOT NULL"
+                    ")"
                 )
+                conn.execute(create_table_sql)
         finally:
             conn.close()
     except Exception:
         # safely ignore initialization errors on restricted storage
         pass
+
+
+def strip_profile_data_for_cache(cards: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    # strip profile choices and profile-dependent actions before saving to cache
+    cleaned_cards: List[Dict[str, Any]] = []
+    for card in cards:
+        c = dict(card)
+        # do not store profile-dependent actions or choices in shared cached records
+        c.pop("actions", None)
+        c.pop("profile", None)
+        cleaned_cards.append(c)
+    return cleaned_cards
 
 
 def get_cached_record(
@@ -116,22 +127,25 @@ def set_cached_record(
         init_cache_db(path)
 
         now_utc = retrieved_at or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-        cards_str = json.dumps(cards)
+        # cache only profile-independent evidence
+        safe_cards = strip_profile_data_for_cache(cards)
+        cards_str = json.dumps(safe_cards)
 
         conn = sqlite3.connect(path)
         try:
             with conn:
+                upsert_sql = (
+                    "INSERT INTO evidence_cache (school_id, school_name, domain, cards_json, retrieved_at, status) "
+                    "VALUES (?, ?, ?, ?, ?, ?) "
+                    "ON CONFLICT(school_id) DO UPDATE SET "
+                    "school_name = excluded.school_name, "
+                    "domain = excluded.domain, "
+                    "cards_json = excluded.cards_json, "
+                    "retrieved_at = excluded.retrieved_at, "
+                    "status = excluded.status"
+                )
                 conn.execute(
-                    """
-                    INSERT INTO evidence_cache (school_id, school_name, domain, cards_json, retrieved_at, status)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                    ON CONFLICT(school_id) DO UPDATE SET
-                        school_name = excluded.school_name,
-                        domain = excluded.domain,
-                        cards_json = excluded.cards_json,
-                        retrieved_at = excluded.retrieved_at,
-                        status = excluded.status
-                    """,
+                    upsert_sql,
                     (school_id, school_name, domain, cards_str, now_utc, "cached"),
                 )
         finally:

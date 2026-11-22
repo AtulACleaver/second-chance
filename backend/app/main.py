@@ -23,7 +23,7 @@ if env_file.exists():
 
 from .cache import get_cached_record, set_cached_record
 from .directory import resolve_school_identity, search_schools
-from .policies import get_curated_card
+from .policies import attach_curated_actions, get_curated_card
 from .research import conduct_research
 
 app = FastAPI(title="Second Chance", version="0.2.0")
@@ -110,6 +110,11 @@ def post_research(req: ResearchRequest) -> Dict[str, Any]:
     # 2 if refresh is not forced check existing cache
     cached_rec, is_stale = get_cached_record(sid)
     if not req.refresh and cached_rec and not is_stale:
+        # generate curated actions using current request profile after reading cached evidence
+        cards = [
+            attach_curated_actions(sid, card, profile_dict)
+            for card in cached_rec["cards"]
+        ]
         return {
             "school": {
                 "id": sid,
@@ -118,7 +123,7 @@ def post_research(req: ResearchRequest) -> Dict[str, Any]:
             },
             "status": "cached",
             "message": "Loaded cached source records",
-            "cards": cached_rec["cards"],
+            "cards": cards,
         }
 
     # 3 execute live research or curated lookup
@@ -130,7 +135,7 @@ def post_research(req: ResearchRequest) -> Dict[str, Any]:
     )
 
     if research_result["status"] == "fresh":
-        # persist successful findings in cache
+        # persist only profile-independent evidence in cache
         set_cached_record(
             school_id=sid,
             school_name=school_name,
@@ -141,6 +146,11 @@ def post_research(req: ResearchRequest) -> Dict[str, Any]:
 
     # 4 if live research failed but previous cache exists return as visibly stale
     if cached_rec:
+        # generate curated actions using current request profile after reading cached evidence
+        cards = [
+            attach_curated_actions(sid, card, profile_dict)
+            for card in cached_rec["cards"]
+        ]
         return {
             "school": {
                 "id": sid,
@@ -149,7 +159,7 @@ def post_research(req: ResearchRequest) -> Dict[str, Any]:
             },
             "status": "stale",
             "message": "Live refresh unavailable; retaining previous verified evidence",
-            "cards": cached_rec["cards"],
+            "cards": cards,
         }
 
     # 5 honest unavailable state when no evidence can be verified

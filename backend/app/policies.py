@@ -191,30 +191,55 @@ def build_curated_actions(
     return actions
 
 
-def get_curated_card(school_id: str, profile: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
-    # return an evidence card for a curated institution formatted to the v2 contract
+def get_curated_evidence(school_id: str) -> Optional[Dict[str, Any]]:
+    # return profile-independent evidence card for curated institution
     canon = canonical_school_id(school_id)
     policy = CURATED_SCHOOLS.get(canon)
     if not policy:
         return None
-
-    prof = profile or {}
-    actions = build_curated_actions(
-        canon,
-        applicant_type=prof.get("applicant_type", "unknown"),
-        needs_aid=prof.get("needs_aid", "unsure"),
-        requested_aid=prof.get("requested_aid", "unsure"),
-        entry_year=prof.get("entry_year", "unknown"),
-    )
 
     return {
         "id": policy["id"],
         "short_name": policy["short_name"],
         "tagline": policy["tagline"],
         "evidence": policy["evidence"],
-        "actions": actions,
         "assessment": "Not evaluated",
     }
+
+
+def attach_curated_actions(
+    school_id: str,
+    card: Dict[str, Any],
+    profile: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    # attach actions generated for the current request profile to an evidence card
+    canon = canonical_school_id(school_id)
+    c = dict(card)
+    prof = profile or {}
+
+    if canon in CURATED_SCHOOLS or c.get("id") in CURATED_SCHOOLS:
+        target_id = canon if canon in CURATED_SCHOOLS else c.get("id", school_id)
+        c["actions"] = build_curated_actions(
+            target_id,
+            applicant_type=prof.get("applicant_type", "unknown"),
+            needs_aid=prof.get("needs_aid", "unsure"),
+            requested_aid=prof.get("requested_aid", "unsure"),
+            entry_year=prof.get("entry_year", "unknown"),
+        )
+    elif "actions" not in c or not c["actions"]:
+        c["actions"] = [
+            "Review the exact quoted policy passages above on the official university website",
+            "Contact international undergraduate admissions to verify requirements for your specific cycle",
+        ]
+    return c
+
+
+def get_curated_card(school_id: str, profile: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
+    # return full evidence card with actions for curated institution
+    base = get_curated_evidence(school_id)
+    if not base:
+        return None
+    return attach_curated_actions(school_id, base, profile)
 
 
 def get_curated_candidates() -> List[Dict[str, Any]]:
