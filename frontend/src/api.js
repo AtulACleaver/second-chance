@@ -113,6 +113,58 @@ export function isFixture(data) {
   return data?.school?.id === 'curated:example';
 }
 
+/**
+ * Operator API helpers for private team demonstration
+ * Strictly requires server-side operator authentication token
+ */
+export async function getOperatorStatus(token) {
+  const headers = token ? { Authorization: `Bearer ${token}` } : {};
+  const res = await fetch(`${API_BASE}/operator/status`, { headers });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Operator status failed with HTTP ${res.status}`);
+  }
+  return await res.json();
+}
+
+export async function createOperatorDraft(payload, token) {
+  const res = await fetch(`${API_BASE}/operator/drafts`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Draft creation failed with HTTP ${res.status}`);
+  }
+  return await res.json();
+}
+
+export async function getOperatorThreads(token) {
+  const res = await fetch(`${API_BASE}/operator/threads`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Thread fetch failed with HTTP ${res.status}`);
+  }
+  return await res.json();
+}
+
+export async function getOperatorThreadMessages(threadId, token) {
+  const res = await fetch(`${API_BASE}/operator/threads/${encodeURIComponent(threadId)}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Thread message fetch failed with HTTP ${res.status}`);
+  }
+  return await res.json();
+}
+
 // Unified api object for backward compatibility
 export const api = {
   health: checkHealth,
@@ -123,4 +175,8 @@ export const api = {
   conductResearch,
   getFictionalFixture,
   isFixture,
+  getOperatorStatus,
+  createOperatorDraft,
+  getOperatorThreads,
+  getOperatorThreadMessages,
 };

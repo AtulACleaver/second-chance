@@ -6,9 +6,12 @@ import {
   MessageCircle, ChevronDown, ChevronUp, Quote, ShieldCheck, Zap, Menu, X, BookOpen,
   Copy, Check, Info, AlertTriangle, Sparkles, Building2, HelpCircle, CheckSquare,
   Square, Download, Share2, Eye, ShieldAlert, SlidersHorizontal, CornerDownRight,
-  WifiOff, Clock
+  WifiOff, Clock, Mail, Lock, Inbox
 } from 'lucide-react';
-import { searchSchools, conductResearch, checkHealth } from './api';
+import {
+  searchSchools, conductResearch, checkHealth,
+  getOperatorStatus, createOperatorDraft, getOperatorThreads, getOperatorThreadMessages
+} from './api';
 import './style.css';
 
 // ============================================================================
@@ -106,7 +109,7 @@ function Logo() {
   );
 }
 
-function Nav({ onHome, onExplore, onNavigateSection, active = 'home' }) {
+function Nav({ onHome, onExplore, onNavigateSection, onOpenOperator, active = 'home' }) {
   const [menu, setMenu] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -162,6 +165,17 @@ function Nav({ onHome, onExplore, onNavigateSection, active = 'home' }) {
             >
               Why Trust Us
             </button>
+            {onOpenOperator && (
+              <button
+                type="button"
+                className="nav-link-item"
+                onClick={onOpenOperator}
+                title="Protected Team Operator Demo"
+              >
+                <Lock size={12} style={{ marginRight: 4, verticalAlign: 'middle' }} />
+                Operator Demo
+              </button>
+            )}
           </nav>
 
           <div className="nav-actions">
@@ -214,6 +228,14 @@ function Nav({ onHome, onExplore, onNavigateSection, active = 'home' }) {
         >
           Why Trust Us
         </button>
+        {onOpenOperator && (
+          <button
+            className="btn btn-ghost btn-md"
+            onClick={() => { setMenu(false); onOpenOperator(); }}
+          >
+            <Lock size={15} style={{ marginRight: 6 }} /> Operator Demo
+          </button>
+        )}
       </div>
     </>
   );
@@ -303,7 +325,7 @@ function ProductPreview({ onOpen }) {
 // ============================================================================
 // PAGE 1: LANDING PAGE
 // ============================================================================
-function Home({ onExplore, onNavigateSection }) {
+function Home({ onExplore, onNavigateSection, onOpenOperator }) {
   const headlineWords = [
     'Your', 'university', 'journey', 'deserves', 'more'
   ];
@@ -314,6 +336,7 @@ function Home({ onExplore, onNavigateSection }) {
         onHome={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         onExplore={onExplore}
         onNavigateSection={onNavigateSection}
+        onOpenOperator={onOpenOperator}
         active="home"
       />
       
@@ -507,7 +530,7 @@ const POPULAR_SEARCHES = [
   'Stanford University'
 ];
 
-function SearchPage({ onBack, onSelect, onNavigateSection }) {
+function SearchPage({ onBack, onSelect, onNavigateSection, onOpenOperator }) {
   const { addToast } = useToast();
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
@@ -601,6 +624,7 @@ function SearchPage({ onBack, onSelect, onNavigateSection }) {
         onHome={onBack}
         onExplore={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         onNavigateSection={onNavigateSection}
+        onOpenOperator={onOpenOperator}
         active="explore"
       />
       
@@ -857,7 +881,583 @@ function EvidenceCard({ item, index, total, onCopy }) {
   );
 }
 
-function Dashboard({ onBack, onNewSearch, selectedSchool, onNavigateSection }) {
+// ============================================================================
+// STUDENT INQUIRY EMAIL COMPOSER MODAL
+// ============================================================================
+function EmailComposerModal({
+  isOpen,
+  onClose,
+  schoolName,
+  questions = [],
+  sources = [],
+  onHandoffToOperator,
+}) {
+  const { addToast } = useToast();
+  const [selectedIndices, setSelectedIndices] = useState(() => new Set(questions.map((_, i) => i)));
+  const [subject, setSubject] = useState(`Inquiry: Undergraduate Financial Aid Policy for International Students (${schoolName})`);
+  const [includeSources, setIncludeSources] = useState(true);
+
+  useEffect(() => {
+    if (questions && questions.length > 0) {
+      setSelectedIndices(new Set(questions.map((_, i) => i)));
+    }
+    setSubject(`Inquiry: Undergraduate Financial Aid Policy for International Students (${schoolName})`);
+  }, [schoolName, questions]);
+
+  const toggleQuestion = (index) => {
+    setSelectedIndices(prev => {
+      const next = new Set(prev);
+      if (next.has(index)) next.delete(index);
+      else next.add(index);
+      return next;
+    });
+  };
+
+  const selectedQuestions = useMemo(() => {
+    return questions.filter((_, idx) => selectedIndices.has(idx));
+  }, [questions, selectedIndices]);
+
+  const emailText = useMemo(() => {
+    let body = `Dear ${schoolName} Financial Aid Office,\n\n`;
+    body += `I am an international prospective undergraduate applicant researching financial-aid policies at ${schoolName}. `;
+    body += `Based on official portal information, I would appreciate clarification on the following questions:\n\n`;
+
+    if (selectedQuestions.length === 0) {
+      body += `[No specific questions selected yet]\n\n`;
+    } else {
+      selectedQuestions.forEach((q, i) => {
+        body += `${i + 1}. ${q.question}\n   Context: ${q.why || ''}\n\n`;
+      });
+    }
+
+    if (includeSources && sources.length > 0) {
+      body += `Referenced official university sources:\n`;
+      sources.slice(0, 3).forEach((s) => {
+        body += `- ${s.source_url || 'Official University Portal'}\n`;
+      });
+      body += `\n`;
+    }
+
+    body += `Thank you for your time and guidance.\n\nSincerely,\nProspective International Applicant`;
+    return body;
+  }, [schoolName, selectedQuestions, includeSources, sources]);
+
+  if (!isOpen) return null;
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(`Subject: ${subject}\n\n${emailText}`);
+    addToast('Inquiry email copied to clipboard');
+  };
+
+  const handleOperatorHandoff = () => {
+    if (onHandoffToOperator) {
+      onHandoffToOperator({
+        subject,
+        text: emailText,
+        sources: sources.map(s => s.source_url || '').filter(Boolean),
+        schoolName,
+      });
+    }
+  };
+
+  return (
+    <div className="modal-backdrop" onClick={onClose} role="dialog" aria-modal="true">
+      <div className="modal-window" style={{ maxWidth: 680, maxHeight: '90vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+        <div className="modal-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <Mail size={20} color="var(--brand-primary)" />
+            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>Prepare Inquiry Email</h3>
+          </div>
+          <button className="modal-close-btn" onClick={onClose} aria-label="Close modal">
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="modal-body">
+          <div className="inquiry-notice-banner">
+            <Info size={16} style={{ flexShrink: 0, marginTop: 2 }} />
+            <div>
+              <strong>Student Inquiry Preparation:</strong> This draft is prepared from official source-linked findings to help you ask clear questions. It does not calculate final cost or guarantee eligibility. Never include sensitive documents, income figures, or passwords.
+            </div>
+          </div>
+
+          <div style={{ marginTop: 16 }}>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>
+              Subject Line
+            </label>
+            <input
+              type="text"
+              value={subject}
+              onChange={e => setSubject(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '10px 12px',
+                borderRadius: 8,
+                border: '1px solid var(--border-color)',
+                fontSize: 14,
+                fontFamily: 'inherit',
+                backgroundColor: 'var(--bg-input)'
+              }}
+            />
+          </div>
+
+          <div style={{ marginTop: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+              <label style={{ fontSize: 13, fontWeight: 600 }}>
+                Select Questions to Include ({selectedIndices.size} of {questions.length})
+              </label>
+              <button
+                type="button"
+                style={{ background: 'none', border: 'none', color: 'var(--brand-primary)', fontSize: 12, cursor: 'pointer', padding: 0 }}
+                onClick={() => {
+                  if (selectedIndices.size === questions.length) setSelectedIndices(new Set());
+                  else setSelectedIndices(new Set(questions.map((_, i) => i)));
+                }}
+              >
+                {selectedIndices.size === questions.length ? 'Deselect all' : 'Select all'}
+              </button>
+            </div>
+            <div style={{ maxHeight: 160, overflowY: 'auto', border: '1px solid var(--border-color)', borderRadius: 8, padding: 8, background: 'var(--bg-card)' }}>
+              {questions.map((q, idx) => (
+                <label key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '6px 4px', cursor: 'pointer', fontSize: 13, borderBottom: idx < questions.length - 1 ? '1px solid var(--border-color-subtle)' : 'none' }}>
+                  <input
+                    type="checkbox"
+                    checked={selectedIndices.has(idx)}
+                    onChange={() => toggleQuestion(idx)}
+                    style={{ marginTop: 3 }}
+                  />
+                  <span>{q.question}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ marginTop: 16 }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={includeSources}
+                onChange={e => setIncludeSources(e.target.checked)}
+              />
+              <span>Include verified official source links in draft ({sources.length} available)</span>
+            </label>
+          </div>
+
+          <div style={{ marginTop: 16 }}>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>
+              Editable Email Preview
+            </label>
+            <textarea
+              className="email-composer-textarea"
+              rows={9}
+              value={emailText}
+              readOnly
+              style={{
+                width: '100%',
+                padding: '10px 12px',
+                borderRadius: 8,
+                border: '1px solid var(--border-color)',
+                fontSize: 13,
+                fontFamily: 'monospace',
+                backgroundColor: 'var(--bg-secondary)',
+                resize: 'vertical'
+              }}
+            />
+          </div>
+        </div>
+
+        <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginTop: 20 }}>
+          <button className="btn btn-secondary btn-sm" onClick={onClose}>
+            Close
+          </button>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button className="btn btn-secondary btn-sm" onClick={handleCopy}>
+              <Copy size={14} /> Copy to Clipboard
+            </button>
+            <button className="btn btn-primary btn-sm" onClick={handleOperatorHandoff}>
+              <Lock size={14} /> Operator Demo (Agentboxd)
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// OPERATOR PORTAL MODAL (PROTECTED AGENTBOXD DEMO)
+// ============================================================================
+function OperatorPortalModal({ isOpen, onClose, initialDraft }) {
+  const { addToast } = useToast();
+  const [operatorToken, setOperatorToken] = useState(() => sessionStorage.getItem('second_chance_operator_token') || '');
+  const [activeTab, setActiveTab] = useState(initialDraft ? 'draft' : 'threads');
+  const [authStatus, setAuthStatus] = useState(null);
+  const [statusMessage, setStatusMessage] = useState('');
+
+  // Draft state
+  const [subject, setSubject] = useState('');
+  const [draftText, setDraftText] = useState('');
+  const [sources, setSources] = useState([]);
+  const [schoolName, setSchoolName] = useState('');
+  const [creatingDraft, setCreatingDraft] = useState(false);
+  const [createdDraftResult, setCreatedDraftResult] = useState(null);
+
+  // Threads state
+  const [threads, setThreads] = useState([]);
+  const [loadingThreads, setLoadingThreads] = useState(false);
+  const [selectedThread, setSelectedThread] = useState(null);
+  const [threadMessages, setThreadMessages] = useState([]);
+  const [loadingMessages, setLoadingMessages] = useState(false);
+
+  useEffect(() => {
+    if (initialDraft) {
+      setSubject(initialDraft.subject || '');
+      setDraftText(initialDraft.text || '');
+      setSources(initialDraft.sources || []);
+      setSchoolName(initialDraft.schoolName || '');
+      setActiveTab('draft');
+    }
+  }, [initialDraft]);
+
+  const checkAuth = useCallback(async (tokenToTest) => {
+    const t = tokenToTest !== undefined ? tokenToTest : operatorToken;
+    setAuthStatus('checking');
+    try {
+      const res = await getOperatorStatus(t);
+      if (res.enabled) {
+        setAuthStatus('authorized');
+        setStatusMessage(`Connected: Demo Inbox ${res.inbox_id}`);
+        if (t) sessionStorage.setItem('second_chance_operator_token', t);
+      } else {
+        setAuthStatus('disabled');
+        setStatusMessage('Operator API is disabled on this server deployment.');
+      }
+    } catch (err) {
+      setAuthStatus('unauthorized');
+      setStatusMessage(err.message || 'Authorization failed');
+    }
+  }, [operatorToken]);
+
+  useEffect(() => {
+    if (isOpen) {
+      checkAuth();
+    }
+  }, [isOpen, checkAuth]);
+
+  const fetchThreads = useCallback(async () => {
+    if (authStatus !== 'authorized' || !operatorToken) return;
+    setLoadingThreads(true);
+    try {
+      const data = await getOperatorThreads(operatorToken);
+      setThreads(data.threads || []);
+    } catch (err) {
+      addToast(err.message || 'Failed to fetch demo threads', 'error');
+    } finally {
+      setLoadingThreads(false);
+    }
+  }, [authStatus, operatorToken, addToast]);
+
+  useEffect(() => {
+    if (activeTab === 'threads' && authStatus === 'authorized') {
+      fetchThreads();
+    }
+  }, [activeTab, authStatus, fetchThreads]);
+
+  const handleSelectThread = async (t) => {
+    setSelectedThread(t);
+    setLoadingMessages(true);
+    try {
+      const data = await getOperatorThreadMessages(t.id, operatorToken);
+      setThreadMessages(data.messages || []);
+    } catch (err) {
+      addToast(err.message || 'Failed to load messages', 'error');
+    } finally {
+      setLoadingMessages(false);
+    }
+  };
+
+  const handleCreateDraft = async () => {
+    if (!draftText.trim()) {
+      addToast('Draft text cannot be empty', 'error');
+      return;
+    }
+    setCreatingDraft(true);
+    setCreatedDraftResult(null);
+    try {
+      const payload = {
+        subject: subject || 'Undergraduate Financial Aid Inquiry',
+        text: draftText,
+        sources: sources,
+        school_name: schoolName,
+      };
+      const result = await createOperatorDraft(payload, operatorToken);
+      setCreatedDraftResult(result);
+      addToast('Unaddressed draft created in Agentboxd!');
+    } catch (err) {
+      addToast(err.message || 'Failed to create draft', 'error');
+    } finally {
+      setCreatingDraft(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="modal-backdrop" onClick={onClose} role="dialog" aria-modal="true">
+      <div className="modal-window" style={{ maxWidth: 760, maxHeight: '92vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+        <div className="modal-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <Lock size={20} color="var(--brand-primary)" />
+            <div>
+              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>Operator Demo Portal</h3>
+              <p style={{ margin: 0, fontSize: 12, color: 'var(--text-tertiary)' }}>
+                Private Agentboxd human-in-the-loop email verification demo
+              </p>
+            </div>
+          </div>
+          <button className="modal-close-btn" onClick={onClose} aria-label="Close modal">
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="modal-body">
+          <div style={{
+            background: 'var(--bg-secondary)',
+            border: '1px solid var(--border-color)',
+            borderRadius: 8,
+            padding: '12px 16px',
+            marginBottom: 16
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+              <div>
+                <span style={{ fontSize: 13, fontWeight: 600 }}>Authentication: </span>
+                <span className={`status-pill ${authStatus === 'authorized' ? 'status-ok' : 'status-warn'}`}>
+                  {authStatus === 'authorized' ? 'Authenticated' : authStatus === 'disabled' ? 'Operator API Disabled' : 'Authentication Required'}
+                </span>
+                <span style={{ fontSize: 12, color: 'var(--text-secondary)', marginLeft: 8 }}>{statusMessage}</span>
+              </div>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <input
+                  type="password"
+                  placeholder="Operator Token"
+                  value={operatorToken}
+                  onChange={e => setOperatorToken(e.target.value)}
+                  style={{
+                    padding: '6px 10px',
+                    fontSize: 12,
+                    borderRadius: 6,
+                    border: '1px solid var(--border-color)',
+                    background: 'var(--bg-card)'
+                  }}
+                />
+                <button
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => checkAuth(operatorToken)}
+                  disabled={authStatus === 'checking'}
+                >
+                  {authStatus === 'checking' ? 'Testing...' : 'Verify'}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {authStatus !== 'authorized' ? (
+            <div className="empty-state-card" style={{ padding: '32px 16px' }}>
+              <Lock size={32} />
+              <h3>Operator Access Protected</h3>
+              <p style={{ maxWidth: 500, margin: '0 auto 12px' }}>
+                In accordance with security and privacy boundaries, operator endpoints are disabled by default on public deployments and require a server-side authentication token.
+              </p>
+              <p style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>
+                Set <code>ENABLE_OPERATOR_API=true</code> and enter your <code>OPERATOR_TOKEN</code> to access the team demonstration portal.
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="operator-tab-bar">
+                <button
+                  className={`operator-tab-btn ${activeTab === 'draft' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('draft')}
+                >
+                  <Mail size={15} /> Create Unaddressed Draft
+                </button>
+                <button
+                  className={`operator-tab-btn ${activeTab === 'threads' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('threads')}
+                >
+                  <Inbox size={15} /> Demo Threads & Replies
+                </button>
+              </div>
+
+              {activeTab === 'draft' && (
+                <div>
+                  <div className="inquiry-notice-banner" style={{ marginBottom: 16 }}>
+                    <Info size={16} style={{ flexShrink: 0, marginTop: 2 }} />
+                    <div>
+                      <strong>Human-in-the-Loop Protocol:</strong> Drafts created here are strictly unaddressed (no recipient is assigned, and no email is sent or scheduled automatically). An operator must open the Agentboxd dashboard, review the drafted content, supply the team test recipient address, and manually send.
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: 12 }}>
+                    <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 4 }}>Subject</label>
+                    <input
+                      type="text"
+                      value={subject}
+                      onChange={e => setSubject(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '8px 12px',
+                        borderRadius: 6,
+                        border: '1px solid var(--border-color)',
+                        fontSize: 13,
+                        background: 'var(--bg-input)'
+                      }}
+                    />
+                  </div>
+
+                  <div style={{ marginBottom: 12 }}>
+                    <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 4 }}>Draft Content</label>
+                    <textarea
+                      rows={8}
+                      value={draftText}
+                      onChange={e => setDraftText(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        borderRadius: 6,
+                        border: '1px solid var(--border-color)',
+                        fontSize: 13,
+                        fontFamily: 'monospace',
+                        background: 'var(--bg-input)'
+                      }}
+                    />
+                  </div>
+
+                  {createdDraftResult && (
+                    <div style={{
+                      background: 'rgba(16, 185, 129, 0.1)',
+                      border: '1px solid #10b981',
+                      borderRadius: 8,
+                      padding: '12px 16px',
+                      marginBottom: 16
+                    }}>
+                      <h4 style={{ margin: '0 0 6px', color: '#10b981', fontSize: 14 }}>Draft Created Successfully in Agentboxd</h4>
+                      <p style={{ margin: '0 0 8px', fontSize: 12 }}>
+                        Draft ID: <code>{createdDraftResult.draft_id}</code> | Inbox: <code>{createdDraftResult.inbox_id}</code>
+                      </p>
+                      <p style={{ margin: 0, fontSize: 12, color: 'var(--text-secondary)' }}>
+                        Next Step: Log into your <a href="https://app.agentboxd.com" target="_blank" rel="noreferrer" style={{ textDecoration: 'underline' }}>Agentboxd Dashboard</a>, review the draft, set recipient to your team test email, and send.
+                      </p>
+                    </div>
+                  )}
+
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+                    <button
+                      className="btn btn-primary btn-md"
+                      onClick={handleCreateDraft}
+                      disabled={creatingDraft}
+                    >
+                      {creatingDraft ? 'Submitting to Agentboxd...' : 'Create Draft in Agentboxd'}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'threads' && (
+                <div>
+                  <div className="test-conversation-notice">
+                    <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: 2 }} />
+                    <div>
+                      <strong>Demo Test Environment:</strong> All messages below are internal team test conversations. Neither outgoing inquiries nor incoming replies represent official university communications. Incoming text is rendered safely as untrusted plain text.
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '14px 0 10px' }}>
+                    <span style={{ fontSize: 13, fontWeight: 600 }}>Demo Inbox Conversations ({threads.length})</span>
+                    <button className="btn btn-secondary btn-sm" onClick={fetchThreads} disabled={loadingThreads}>
+                      <RefreshCw size={13} className={loadingThreads ? 'spin' : ''} /> Refresh
+                    </button>
+                  </div>
+
+                  {loadingThreads ? (
+                    <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--text-secondary)' }}>
+                      Loading test threads...
+                    </div>
+                  ) : threads.length === 0 ? (
+                    <div className="empty-state-card" style={{ padding: '24px 16px' }}>
+                      <Inbox size={24} />
+                      <p style={{ margin: '8px 0 0' }}>No threads recorded yet in the demo inbox.</p>
+                      <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>Send a draft to your team test address and reply to generate a thread.</span>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'grid', gridTemplateColumns: selectedThread ? '1fr 1fr' : '1fr', gap: 12 }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 360, overflowY: 'auto' }}>
+                        {threads.map(t => (
+                          <div
+                            key={t.id}
+                            className={`thread-list-item ${selectedThread?.id === t.id ? 'active' : ''}`}
+                            onClick={() => handleSelectThread(t)}
+                          >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 4 }}>
+                              <strong style={{ fontSize: 13 }}>{t.subject || '(No Subject)'}</strong>
+                              <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>{t.updated_at ? new Date(t.updated_at).toLocaleDateString() : ''}</span>
+                            </div>
+                            <div style={{ fontSize: 11, color: 'var(--text-secondary)', display: 'flex', gap: 8 }}>
+                              <span>Status: {t.status || 'open'}</span>
+                              <span style={{ color: '#f59e0b', fontWeight: 600 }}>Team Test</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {selectedThread && (
+                        <div style={{ border: '1px solid var(--border-color)', borderRadius: 8, padding: 12, background: 'var(--bg-card)', maxHeight: 360, overflowY: 'auto' }}>
+                          <h4 style={{ margin: '0 0 8px', fontSize: 13, borderBottom: '1px solid var(--border-color)', paddingBottom: 6 }}>
+                            {selectedThread.subject}
+                          </h4>
+                          {loadingMessages ? (
+                            <div style={{ textAlign: 'center', padding: 16 }}>Loading messages...</div>
+                          ) : threadMessages.length === 0 ? (
+                            <div style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>No messages found in this thread.</div>
+                          ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                              {threadMessages.map(m => (
+                                <div key={m.id} className="conversation-msg-bubble">
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-tertiary)', marginBottom: 4 }}>
+                                    <span>From: <strong>{m.sender || 'team-test@example.com'}</strong></span>
+                                    <span>{m.sent_at ? new Date(m.sent_at).toLocaleTimeString() : ''}</span>
+                                  </div>
+                                  <div style={{ fontSize: 12, whiteSpace: 'pre-wrap', lineHeight: 1.45 }}>
+                                    {m.text_body || m.snippet || '(Empty message)'}
+                                  </div>
+                                  <div style={{ marginTop: 4, fontSize: 10, color: '#f59e0b', fontStyle: 'italic' }}>
+                                    [Team Test Message - Not an official university response]
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        <div className="modal-footer" style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 20 }}>
+          <button className="btn btn-secondary btn-sm" onClick={onClose}>
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Dashboard({ onBack, onNewSearch, selectedSchool, onNavigateSection, onOpenOperator }) {
   const { addToast } = useToast();
   const [tab, setTab] = useState('Overview');
   const [refreshing, setRefreshing] = useState(false);
@@ -873,7 +1473,8 @@ function Dashboard({ onBack, onNewSearch, selectedSchool, onNavigateSection }) {
   const [askedQuestions, setAskedQuestions] = useState(new Set());
   const [expandedQuestions, setExpandedQuestions] = useState(new Set());
 
-  // edit context modal state
+  // email composer & edit context modal states
+  const [emailComposerOpen, setEmailComposerOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [contextData, setContextData] = useState({
     applicantType: 'First-year',
@@ -1069,7 +1670,7 @@ function Dashboard({ onBack, onNewSearch, selectedSchool, onNavigateSection }) {
   if (researchLoading && !researchData) {
     return (
       <>
-        <Nav onHome={onBack} onExplore={onNewSearch} onNavigateSection={onNavigateSection} active="explore" />
+        <Nav onHome={onBack} onExplore={onNewSearch} onNavigateSection={onNavigateSection} onOpenOperator={onOpenOperator} active="explore" />
         <main className="dashboard-container" id="main">
           <button className="back-btn" onClick={onBack} aria-label="Go back to search results">
             <ArrowLeft size={16} /> Back to search results
@@ -1088,7 +1689,7 @@ function Dashboard({ onBack, onNewSearch, selectedSchool, onNavigateSection }) {
   if (researchError && !researchData) {
     return (
       <>
-        <Nav onHome={onBack} onExplore={onNewSearch} onNavigateSection={onNavigateSection} active="explore" />
+        <Nav onHome={onBack} onExplore={onNewSearch} onNavigateSection={onNavigateSection} onOpenOperator={onOpenOperator} active="explore" />
         <main className="dashboard-container" id="main">
           <button className="back-btn" onClick={onBack} aria-label="Go back to search results">
             <ArrowLeft size={16} /> Back to search results
@@ -1108,7 +1709,7 @@ function Dashboard({ onBack, onNewSearch, selectedSchool, onNavigateSection }) {
 
   return (
     <>
-      <Nav onHome={onBack} onExplore={onNewSearch} onNavigateSection={onNavigateSection} active="explore" />
+      <Nav onHome={onBack} onExplore={onNewSearch} onNavigateSection={onNavigateSection} onOpenOperator={onOpenOperator} active="explore" />
 
       <main className="dashboard-container" id="main">
         <button className="back-btn" onClick={onBack} aria-label="Go back to search results">
@@ -1323,6 +1924,9 @@ function Dashboard({ onBack, onNewSearch, selectedSchool, onNavigateSection }) {
                   </div>
 
                   <div className="questions-global-actions">
+                    <button className="btn btn-primary btn-sm" onClick={() => setEmailComposerOpen(true)}>
+                      <Mail size={14} /> Prepare Inquiry Email
+                    </button>
                     <button
                       className="btn btn-secondary btn-sm"
                       onClick={() => {
@@ -1332,7 +1936,7 @@ function Dashboard({ onBack, onNewSearch, selectedSchool, onNavigateSection }) {
                     >
                       <Copy size={14} /> Copy all
                     </button>
-                    <button className="btn btn-primary btn-sm" onClick={handleExportChecklist}>
+                    <button className="btn btn-secondary btn-sm" onClick={handleExportChecklist}>
                       <Download size={14} /> Export checklist
                     </button>
                     <button className="btn btn-secondary btn-sm" onClick={handleExportAgentboxdHandoff}>
@@ -1555,6 +2159,18 @@ function Dashboard({ onBack, onNewSearch, selectedSchool, onNavigateSection }) {
         </div>
       )}
 
+      <EmailComposerModal
+        isOpen={emailComposerOpen}
+        onClose={() => setEmailComposerOpen(false)}
+        schoolName={schoolName}
+        questions={dynamicQuestions}
+        sources={evidence}
+        onHandoffToOperator={(draftData) => {
+          setEmailComposerOpen(false);
+          if (onOpenOperator) onOpenOperator(draftData);
+        }}
+      />
+
       <Footer onExplore={onNewSearch} onNavigateSection={onNavigateSection} />
     </>
   );
@@ -1603,6 +2219,15 @@ function Footer({ onExplore, onNavigateSection }) {
 function App() {
   const [page, setPage] = useState('home');
   const [selectedSchool, setSelectedSchool] = useState(null);
+  const [operatorModalOpen, setOperatorModalOpen] = useState(false);
+  const [operatorDraftData, setOperatorDraftData] = useState(null);
+
+  const handleOpenOperator = (draft) => {
+    if (draft && !draft.nativeEvent) {
+      setOperatorDraftData(draft);
+    }
+    setOperatorModalOpen(true);
+  };
 
   const navigateToSearch = () => {
     setPage('search');
@@ -1647,6 +2272,7 @@ function App() {
             <Home
               onExplore={navigateToSearch}
               onNavigateSection={handleNavigateSection}
+              onOpenOperator={handleOpenOperator}
             />
           </div>
         )}
@@ -1657,6 +2283,7 @@ function App() {
               onBack={navigateToHome}
               onSelect={navigateToDashboard}
               onNavigateSection={handleNavigateSection}
+              onOpenOperator={handleOpenOperator}
             />
           </div>
         )}
@@ -1668,9 +2295,16 @@ function App() {
               onNewSearch={navigateToSearch}
               selectedSchool={selectedSchool}
               onNavigateSection={handleNavigateSection}
+              onOpenOperator={handleOpenOperator}
             />
           </div>
         )}
+
+        <OperatorPortalModal
+          isOpen={operatorModalOpen}
+          onClose={() => setOperatorModalOpen(false)}
+          initialDraft={operatorDraftData}
+        />
       </div>
     </ToastProvider>
   );

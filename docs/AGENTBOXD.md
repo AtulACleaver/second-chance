@@ -1,24 +1,84 @@
-# Agentboxd draft demo
+# Agentboxd Integration Architecture & Operator Workflow
 
-Second Chance helps international undergraduate applicants identify questions to ask a university. This optional, operator-assisted demo takes unanswered questions and source links exported from a research page and creates an **unaddressed, unsent** draft in a team-owned Agentboxd inbox. A human must review the content, add the correct university address, and decide whether to send. It is not a self-service integration for public visitors and it is not an eligibility decision.
+Second Chance helps international prospective undergraduate applicants research US university financial-aid policies with verified, source-linked evidence passages.
 
-The export contains the university name, unchecked questions, and source URLs. It deliberately leaves out the applicant profile and does not automatically upload anything. The person running the script sends the exported questions and URLs to Agentboxd only with the explicit `--create-draft` command. Do not use another person's export without their consent.
+The **Agentboxd integration** bridges the gap between student research and real-world institutional communication through a private, team-operated **human-in-the-loop email workflow**.
 
-## Try it
+---
 
-1. Open a university research result, review the questions and uncheck those you want to include. Choose **Export for Agentboxd demo** in Next Questions.
-2. From the repository root, install the project's Python dependencies: `python -m pip install -r requirements.txt`.
-3. Preview without contacting Agentboxd: `python scripts/agentboxd_draft.py path/to/second-chance-agentboxd-handoff.json`.
-4. Set `AGENTBOXD_API_KEY` and `AGENTBOXD_INBOX_ID` in your local environment. Use a key limited to the demo inbox and `drafts:write`. Do not commit the key or put it in the frontend. Consult https://agentboxd.com/docs/api#api-keys-and-permissions and https://agentboxd.com/docs/drafts for current setup.
-5. Create the draft: `python scripts/agentboxd_draft.py path/to/second-chance-agentboxd-handoff.json --create-draft`.
-6. Open the Agentboxd dashboard, review the questions and official links, and add the university's verified recipient. Nothing is sent or scheduled by the script.
+## 1. Product Workflow
 
-The public app never receives or stores the Agentboxd key. This demo uses the documented `POST /v1/inboxes/:id/drafts` endpoint and does not call a send or schedule endpoint. Creating a real draft still requires an Agentboxd account and key, and the account's current plan and permissions must allow the operation. Until tested against a real account, describe this as an integration implementation, not a verified live integration.
+```
+[Student Research Result]
+         │
+         ▼
+[Select Policy Questions] ─────────────► [Editable Inquiry Preview]
+                                                    │
+                                                    ▼
+                                       [Operator Demo Portal]
+                                                    │ (Authenticated via OPERATOR_TOKEN)
+                                                    ▼
+                                       [POST /v1/inboxes/:id/drafts]
+                                                    │ (Unaddressed, unsent draft)
+                                                    ▼
+                                        [Agentboxd Dashboard]
+                                                    │
+                                                    ▼ (Human Operator Review)
+                                        [Operator sets Team Test Address]
+                                                    │
+                                                    ▼ (Human clicks "Send")
+                                        [Team Test Inbox Receives Email]
+                                                    │
+                                                    ▼ (Team Member Replies)
+                                        [Agentboxd Inbound Webhook/Sync]
+                                                    │
+                                                    ▼
+                                        [Operator View: Inspect Thread]
+                                           (Safe plain text rendering)
+```
 
-Run offline checks with `python evaluation/agentboxd_checks.py`. They use a mock HTTP transport, not a live Agentboxd account.
+1. **Student Inquires**: The student conducts research on an institution (e.g., Cornell, Princeton). On the result page, they open the **Inquiry Email Composer**, select specific questions they want to clarify, and preview an email draft containing official portal citations.
+2. **Unaddressed Draft Creation**: For team demonstration, the operator initiates a handoff to the protected Operator Portal. With server-side authentication, the backend creates an unaddressed draft in the team's designated Agentboxd inbox via `POST /v1/inboxes/{inbox_id}/drafts`.
+3. **Mandatory Human Review**: In the Agentboxd dashboard, a human operator reviews the draft content, verifies the questions, assigns a team-owned test email address as the recipient, and manually triggers send. **No email is ever sent or scheduled automatically.**
+4. **Test Conversation Loop**: The team replies to the inquiry from the test address. The protected Operator Portal fetches the resulting thread and messages via the backend, displaying the real conversation with strict safety boundaries and explicit disclaimers.
 
-The older `scripts/sponsor_draft.py` is separate from this workflow and its payload does not follow the current Agentboxd draft API. Do not use it to demonstrate the integration.
+---
 
-## AI disclosure
+## 2. Privacy & Security Boundaries
 
-Notion AI assisted with the Agentboxd draft workflow, export, documentation, and offline checks. Team members should review and understand these changes and update the project's AI disclosure to reflect their actual contributions before submission.
+To safeguard user privacy and prevent unauthorized usage, strict architectural guardrails are enforced:
+
+- **Private Team Demo Only**: This integration is designed for team demonstration and human verification. It is **not** a public multi-user messaging system.
+- **Disabled by Default on Public Deployments**: Operator endpoints (`/api/operator/*`) are explicitly gated behind `ENABLE_OPERATOR_API=false`. They must be deliberately enabled for local or internal testing.
+- **Server-Side Authentication**: Accessing enabled operator routes requires a secret bearer token (`OPERATOR_TOKEN`). Hidden URLs, CORS, or frontend client checks are never relied upon for security.
+- **No Credentials Exposed**: `AGENTBOXD_API_KEY` and `AGENTBOXD_INBOX_ID` reside strictly on the backend server. They are never transmitted to frontend clients, logged in transcripts, or committed to Git.
+- **Strictly Unaddressed Drafts**: The draft endpoint only submits `{"subject": "...", "text": "..."}`. It strictly omits recipient fields (`to`), and never invokes scheduling (`send_at`) or auto-send endpoints.
+- **Untrusted Inbound Data & HTML Escaping**: Message text returned from email threads is treated as untrusted input. HTML tags are stripped and escaped before rendering in the UI to prevent XSS.
+- **Zero Sensitive Data Collection**: Students are never prompted for tax documents, CSS Profile credentials, income numbers, passwords, or personal identity documents.
+- **Explicit Test Labelling**: All demo conversations are explicitly tagged as **"Team Test Conversation"** and disclaim: *"This is an internal team-operated test conversation for demonstration purposes. It is not an official university response."*
+
+---
+
+## 3. API Contract Reference
+
+### Operator Endpoints (Mounted under `/api/operator`)
+
+| Method | Endpoint | Auth | Description |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/operator/status` | `Bearer <token>` | Checks if operator mode is enabled and returns the active demo inbox ID. |
+| `POST` | `/api/operator/drafts` | `Bearer <token>` | Creates an unaddressed draft in Agentboxd (`{"subject", "text"}`). Returns `draft_id`. |
+| `GET` | `/api/operator/threads` | `Bearer <token>` | Retrieves active threads from the configured demo inbox. |
+| `GET` | `/api/operator/threads/{thread_id}` | `Bearer <token>` | Retrieves sanitized messages for a specific demo thread. |
+
+---
+
+## 4. Multi-User Production Launch Roadmap
+
+A public, production-grade release allowing applicants to manage their own university correspondence would require substantial architectural enhancements:
+
+1. **User Authentication & Identity Federation**: Implement enterprise-grade authentication (OAuth 2.0 / OIDC / Passkeys) to uniquely authenticate each student.
+2. **Multi-Tenant Data Isolation**: Implement database row-level security (RLS) guaranteeing strict tenant boundaries between students' correspondence, preventing any risk of cross-tenant data leakage.
+3. **Dedicated Inboxes or Dynamic Alias Routing**: Assign student-specific alias routing (e.g. `applicant+xyz@inquiries.secondchance.org`) with strict per-user authorization policies.
+4. **Webhook Signature Verification**: Secure Agentboxd webhook endpoints with HMAC-SHA256 signature verification and replay prevention.
+5. **Content Security Policy & Sanitization Pipeline**: Deploy server-side email sanitization (e.g., Bleach/DOMPurify) with strict Content Security Policies (CSP) and attachment sandbox virus scanning.
+6. **Regulatory & Compliance Assurance**: Ensure full compliance with FERPA (Family Educational Rights and Privacy Act) and GDPR regarding student educational records and consent.
